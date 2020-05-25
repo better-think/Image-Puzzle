@@ -1,0 +1,220 @@
+body {
+  --l: 3.5em;
+}
+
+.floating-bar {
+  position: absolute;
+  display: flex;
+  justify-content: space-between;
+  min-width: 200px;
+  height: 80px;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  padding: 15px;
+  margin-left: 0;
+  margin-right: 0;
+  background-color: white;
+  border-radius: 5px;
+  z-index: 10;
+  -webkit-box-shadow: 1px 1px 10px 0px rgba(0,0,0,0.75);
+  -moz-box-shadow: 1px 1px 10px 0px rgba(0,0,0,0.75);
+  box-shadow: 1px 1px 10px 0px rgba(0,0,0,0.75);
+}
+
+.floating-bar.single-player {
+  max-width: 300px;
+}
+
+.floating-bar.multi-player {
+  max-width: 380px;
+}
+
+.floating-bar .player {
+  display: flex;
+  justify-content: center;
+}
+
+.floating-bar .avatar {
+  height: 50px;
+}
+
+.floating-bar .player-separator {
+  width: 1px;
+  background-color: rgb(0, 0, 0, 0.5);
+  margin: 0 15px;
+}
+
+.floating-bar .action {
+  display: flex;
+  padding: 5px;
+}
+
+.floating-bar .action-button {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  margin: 0px 10px;
+  font-size: 30px;
+  background-color: yellowgreen;
+  padding: 5px;
+  cursor: pointer;
+}
+
+.record-panel {
+  position: absolute;
+  display: flex;
+  bottom: 10px;
+  left: 10px;
+  height: 56px;
+  width: 240px;
+  border-radius: 28px;
+  padding: 0 0 0 24px;
+  z-index: 1;
+  background-color: rgba(0,0,0,0.75);
+  color: white;
+  justify-content: space-between;
+}
+
+.record-panel .record {
+  max-width: 159px;
+  width: calc(100% - 80px);
+  padding: 4px 0;
+}
+
+.record-panel .record-item {
+  width: max-content;
+  font-size: 15px;
+  text-overflow: clip;
+}
+
+.record-panel .finish-button {
+  height: 56px;
+  width: 56px;
+  background-color: red;
+  border-radius: 50%;
+  display: block;
+  padding: 13px;
+  font-size: 30px;
+  cursor: pointer;
+}
+
+.triggerButton { display: none; }
+
+.triggerButton + label {
+  cursor: pointer;
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  background-color: tomato;
+  height: var(--l);
+  width: var(--l);
+  border-radius: 50%;
+  z-index: 2;
+  margin-bottom: 0;
+}
+
+.trigger-button-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2em;
+  color: white;
+}
+
+.triggerButton:checked + label { transform: rotatez(-90deg); }
+
+.one, .two, .three, .four {
+  cursor: pointer;
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 0.5em 0.4em 0.5em 0.6em;
+  width: 2em;
+  height: 2em;
+  border-radius: 50%;
+  opacity: 0;
+  z-index: 1;
+  transform: rotateZ(90deg);
+  font-size: 1em;
+  color: #fff;
+  transition-property: all;
+  transition-duration: .35s;
+  transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.triggerButton:checked ~ .one, .triggerButton:checked ~ .two, .triggerButton:checked ~ .three, .triggerButton:checked ~ .four { opacity: 1; }
+
+.triggerButton:checked ~ .one {
+  background-color: purple;
+  transform: translateX(-5em);
+  transition-delay: .3s;
+}
+
+.triggerButton:checked ~ .two {
+  background-color: slateblue;
+  transform: translateX(-4.5em) translateY(-2.6em);
+  transition-delay: .2s;
+}
+
+.triggerButton:checked ~ .three {
+  background-color: mediumorchid;
+  transform: translateX(-2.6em) translateY(-4.5em);
+  transition-delay: .1s;
+}
+
+.triggerButton:checked ~ .four {
+  background-color: slateblue;
+  transform: translateY(-5em);
+}
+
+.triggerButton:checked ~.one:hover, .triggerButton:checked ~ .two:hover, .triggerButton:checked ~ .three:hover, .triggerButton:checked ~ .four:hover { opacity: .9; }
+
+@media screen and (max-width: 400px) {
+  .floating-bar.multi-player {
+    display: block;
+    width: calc(100% - 20px);
+    height: 140px;
+  }
+
+  .floating-bar.multi-player .player {
+    width: 100%;
+  }
+
+  .floating-bar.multi-player .action {
+    width: 100%;
+    margin-top: 15px;
+    justify-content: space-evenly;
+  }
+
+  .record-panel {
+    width: calc(100% - 20px);
+  }
+
+  .triggerButton + label {
+    bottom: 76px;
+  }
+
+  .one, .two, .three, .four {
+    bottom: 76px;
+  }
+}
+
+@media screen and (max-width: 320px) {
+  .floating-bar.single-player {
+    display: block;
+    width: calc(100% - 20px);
+    height: 140px;
+  }
+
+  .floating-bar.single-player .player {
+    width: 100%;
+  }
+
+  .floating-bar.single-player .action {
+    width: 100%;
+    margin-top: 15px;
+    justify-content: space-evenly;
+  }
+}

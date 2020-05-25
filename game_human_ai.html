@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Game</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/game.css">
+  </head>
+  <body>
+    <div class="main-container">
+      <div class="floating-bar multi-player">
+        <div class="player">
+          <div class="main-player">
+            <img src="assets/img/user.png" class="avatar" />
+          </div>
+          <div class="player-separator"></div>
+          <div class="assistant-player">
+            <img src="assets/img/bot.png" class="avatar" />
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-button fa fa-hand-paper-o"></div>
+          <div class="action-button fa fa-link"></div>
+          <div class="action-button fa fa-unlink"></div>
+        </div>
+      </div>
+      <div class="record-panel">
+        <div class="record">
+          <div class="record-item">World Record: 01:30:55</div>
+          <div class="record-item">Time Ellapse: 00:45:12</div>
+        </div>
+        <div class="finish">
+          <div class="finish-button fa fa-check"></div>
+        </div>
+      </div>
+      <canvas id="stage"></canvas>
+      <input id="triggerButton" class="triggerButton" type="checkbox" />
+      <label for="triggerButton">
+        <div class="trigger-button-icon fa fa-hand-o-right"></div>
+      </label>
+      <div class="one fa fa-arrow-left"></div>
+      <div class="two fa fa-arrow-right"></div>
+      <div class="three fa fa-plus"></div>
+      <div class="four fa fa-minus"></div>
+    </div>
+  </body>
+
+  <script src="assets/js/bootstrap.min.js"></script>
+  <script src="assets/js/jquery-3.5.1.min.js"></script>
+  <script src="assets/js/fabric.min.js"></script>
+  <script src="assets/js/game.js"></script>
+</html>
