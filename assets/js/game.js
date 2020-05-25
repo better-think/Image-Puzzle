@@ -106,9 +106,9 @@ canvas.on('mouse:wheel', function(options) {
   var delta = options.e.deltaY;
   var pointer = canvas.getPointer(options.e);
   var zoom = canvas.getZoom();
-  zoom = zoom + delta / 1000;
-  if (zoom > 10) zoom = 10;
-  if (zoom < 0.1) zoom = 0.1;
+  zoom = zoom * Math.pow(2, delta / 100);
+  if (zoom > 8) zoom = 8;
+  if (zoom < 0.125) zoom = 0.125;
   canvas.zoomToPoint({ x: options.e.offsetX, y: options.e.offsetY }, zoom);
   options.e.preventDefault();
   options.e.stopPropagation();
@@ -116,6 +116,20 @@ canvas.on('mouse:wheel', function(options) {
 
 canvas.on('selection:cleared', function(options) {
   canvas.selection = false;
+});
+
+$('.three').click(function(){
+  var zoom = canvas.getZoom();
+  zoom = zoom * 2;
+  if (zoom > 8) zoom = 8;
+  canvas.zoomToPoint({ x: canvas.getCenter().left, y: canvas.getCenter().top }, zoom);
+});
+
+$('.four').click(function(){
+  var zoom = canvas.getZoom();
+  zoom = zoom / 2;
+  if (zoom < 0.125) zoom = 0.125;
+  canvas.zoomToPoint({ x: canvas.getCenter().left, y: canvas.getCenter().top }, zoom);
 });
 
 function resizeCanvas() {
@@ -218,3 +232,146 @@ function animate() {
 
   canvas.renderAll();
 }
+
+
+var intro_arr = [
+  {
+    id: 1,
+    content: 'This is just intro 1.'
+  },
+  {
+    id: 2,
+    content: 'This is just intro 2.'
+  },
+  {
+    id: 3,
+    content: 'This is just intro 3.'
+  },
+  {
+    id: 4,
+    content: 'This is just intro 4.'
+  },
+  {
+    id: 5,
+    content: 'This is just intro 5.'
+  }
+];
+
+var element_id = 0;
+
+$('#intro_modal').modal('show');
+$("#intro-content")[0].innerHTML = intro_arr[element_id].content;
+
+$('#next_btn').click(function(){
+  element_id ++;
+  $("#intro-content")[0].innerHTML = intro_arr[element_id].content;
+	if (element_id == intro_arr.length - 1) {
+		$(this).attr('disabled','');
+		$('#start_btn').text(' Start Now! ');
+	}
+	$('#prev_btn').removeAttr('disabled');
+});
+
+$('#prev_btn').click(function(){
+  element_id --;
+  $("#intro-content")[0].innerHTML = intro_arr[element_id].content;
+	if (element_id == 0) {
+		$(this).attr('disabled','');
+	}
+  $('#start_btn').text('Skip & Start');
+  $('#next_btn').removeAttr('disabled');
+});
+
+$('#start_btn').click(function(){
+	
+});
+
+$('#finish_btn').click(function(){
+	$('#finish_modal').modal('show');
+});
+
+$('#finish_ok_btn').click(function(){
+	
+});
+
+
+var ai_tip_arr = [
+	'Do ABC',
+	'Take something',
+	'Move anything',
+	'Rotate everything',
+	'Zoom in and out repeatedly',		
+	'Come here',
+	'Go there',
+	'Dance with her',
+	'Sing with me',
+	'Get on now'
+];
+
+var slider = document.getElementById("ai_tip_slider");
+
+var tip_count_on_view = 5;
+
+slider.oninput = function() {
+  var str = '';
+  for(var i = this.value - 4; i < this.value; i ++){
+    str += '<li>';
+    str += ai_tip_arr[i];
+    str += '</li>';
+  }
+  $('.list_container ul').html(str);
+}
+
+$('#up').click(function(){
+  if (slider.value < tip_count_on_view) {
+		return;
+	}
+  slider.value -= 1;
+  console.log(slider.value)
+  var str = '';
+	if (slider.value >= tip_count_on_view) {
+		for(var i = slider.value - tip_count_on_view; i < slider.value; i ++){
+			str += '<li>';
+			str += ai_tip_arr[i];
+			str += '</li>';
+		}
+		$('.tip-list-wrapper ul').html(str);
+	}
+});
+
+$('#down').click(function(){
+  if (slider.value > ai_tip_arr.length) {
+		return;
+  }
+  var slider_val = slider.value;
+  slider_val ++;
+  slider.value = slider_val;
+	var str = '';
+	if (slider.value >= tip_count_on_view) {
+		for(var i = slider.value - tip_count_on_view; i < slider.value; i ++){
+			str += '<li>';
+			str += ai_tip_arr[i];
+			str += '</li>';
+		}
+		$('.tip-list-wrapper ul').html(str);
+	}
+});
+
+
+$('#robot').click(function(){
+	if ($('.ai-tip-slider-container').css('display') == 'flex') {
+		$('.ai-tip-slider-container').hide();
+	}
+	else if($('.ai-tip-slider-container').css('display') == 'none'){
+    $('.ai-tip-slider-container').show();
+    $('.ai-tip-slider-container').css('display', 'flex');
+	}
+	$('#ai_tip_slider').css('width',$('#ai_tip_slider').parent().height());
+	var str = '';
+	for(var i = 0; i < tip_count_on_view; i ++){
+		str += '<li>';
+		str += ai_tip_arr[i];
+		str += '</li>';
+	}
+	$('.tip-list-wrapper ul').html(str);
+});
