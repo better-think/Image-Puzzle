@@ -1,12 +1,5 @@
 var canvas = new fabric.Canvas('stage');
 
-var lowerCanvasElement = document.getElementsByClassName('lower-canvas')[0];
-var upperCanvasElement = document.getElementsByClassName('upper-canvas')[0];
-
-window.addEventListener('resize', resizeCanvas, false);
-
-resizeCanvas();
-
 var isMobile = false;
 
 if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|ipad|iris|kindle|Android|Silk|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i.test(navigator.userAgent) 
@@ -14,13 +7,26 @@ if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine
     isMobile = true;
 }
 
+var action_type = 0; // 0: Move, 1: Link, 2: Unlink
+var tempSelection = new fabric.ActiveSelection([], {canvas: canvas});
+
+var objectsInCurrentGroup = [];
+
+var lowerCanvasElement = document.getElementsByClassName('lower-canvas')[0];
+var upperCanvasElement = document.getElementsByClassName('upper-canvas')[0];
+
+window.addEventListener('resize', resizeCanvas, false);
+
+resizeCanvas();
+
 var total = 36;
-var currentTotal = 0;
 var fragments = [];
-var movingFragments = [];
+var movingObjects = [];
 var crushCounts = [];
 var absorptionConst = 0.9;
 var initialMouseX = 0, initialMouseY = 0;
+
+canvas.selection = false;
 
 for (var i = 1; i <= total; i ++) {
   var fileNumber = `000${i}`;
@@ -60,62 +66,188 @@ for (var i = 1; i <= total; i ++) {
     // add image onto canvas (it also re-render the canvas)
     canvas.add(img);
     fragments.push(img);
-    currentTotal = fragments.length;
 
   }, {crossOrigin: 'anonymous'});
 }
 
-canvas.selection = false;
-
 canvas.on('mouse:down', function(options) {
-  if (canvas.getActiveObject()) {
-    canvas.selection = true;
-  }
-  else if (isMobile) {
-    initialMouseX = options.e.targetTouches[0].screenX;
-    initialMouseY = options.e.targetTouches[0].screenY;
-  }
-  else if (options.e.buttons == 1) {
-    initialMouseX = options.e.offsetX;
-    initialMouseY = options.e.offsetY;
+  if (action_type == 0) {
+    if (isMobile) {
+      initialMouseX = options.e.targetTouches[0].screenX;
+      initialMouseY = options.e.targetTouches[0].screenY;
+    }
+    else if (options.e.buttons == 1) {
+      initialMouseX = options.e.offsetX;
+      initialMouseY = options.e.offsetY;
+    }
   }
 });
 
 canvas.on('mouse:move', function(options) {
-  if (!canvas.getActiveObject()) {
-    if (isMobile) {
-      moveAllFragments(options.e.changedTouches[0].screenX, options.e.changedTouches[0].screenY);
+  if (action_type == 0) {
+    if (!canvas.getActiveObject()) {
+      if (isMobile) {
+        moveAllObjects(options.e.changedTouches[0].screenX, options.e.changedTouches[0].screenY);
+      }
+      else if(options.e.buttons == 1) {
+        moveAllObjects(options.e.offsetX, options.e.offsetY);
+      }
     }
-    else if(options.e.buttons == 1) {
-      moveAllFragments(options.e.offsetX, options.e.offsetY);
+  }
+  else if (action_type == 1) {
+    if (isMobile || options.e.buttons == 1) {
+      var target = options.target;
+      if (target) {
+        if (target.type == 'group') {
+          var subObjects = target.getObjects();
+          target.toActiveSelection();
+          canvas.discardActiveObject();
+          
+          subObjects.map((subObject) => {
+            if (!tempSelection.contains(subObject)) {
+              tempSelection.addWithUpdate(subObject);
+            }
+          });
+        }
+        else {
+          if (!tempSelection.contains(target)) {
+            tempSelection.addWithUpdate(target);
+          }
+        }
+      }
+    }
+  }
+  else if (action_type == 2) {
+    if (isMobile || options.e.buttons == 1) {
+      var target = options.target;
+      if (target) {
+        if (target.type == 'group') {
+          objectsInCurrentGroup = target.getObjects();
+          target.toActiveSelection();
+          canvas.discardActiveObject();
+        }
+        else {
+          var tempObjectsInCurrentGroup = objectsInCurrentGroup.slice();
+          tempObjectsInCurrentGroup.map((object) => {
+            if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY))) {
+              console.log('HIT!');
+              objectsInCurrentGroup.splice(objectsInCurrentGroup.indexOf(object), 1);
+              tempSelection.addWithUpdate(object);
+            }
+          });
+        }
+      }
+      // else {
+      //   if (objectsInCurrentGroup.length > 0) {
+      //     var newSelection = new fabric.ActiveSelection([], {canvas: canvas});
+      //     objectsInCurrentGroup.map((object) => {
+      //       newSelection.addWithUpdate(object);
+      //     });
+      //     newSelection.toGroup().selectable = false;
+      //   }
+      //   if (tempSelection.size() > 0) {
+      //     tempSelection.toGroup().selectable = false;
+      //     tempSelection = new fabric.ActiveSelection([], {canvas: canvas});
+      //   }
+      //   canvas.discardActiveObject();
+      //   canvas.requestRenderAll();
+      // }
     }
   }
 });
 
 canvas.on('mouse:up', function(options) {
-  if(options.e.ctrlKey) {
-    if (canvas.getActiveObject()) {
-      movingFragments = [canvas.getActiveObject()];
-      crushCounts = [0];
-      animate();
+  if (action_type == 0) {
+    if(options.e.ctrlKey) {
+      if (canvas.getActiveObject()) {
+        movingObjects = [canvas.getActiveObject()];
+        crushCounts = [0];
+        animate();
+      }
     }
+  }
+  else if (action_type == 1) {
+    if (tempSelection.size() > 0) {
+      var newGroup = tempSelection.toGroup()
+
+      newGroup.selectable = false;
+      newGroup.setControlVisible('tl', false);
+      newGroup.setControlVisible('tr', false);
+      newGroup.setControlVisible('br', false);
+      newGroup.setControlVisible('bl', false);
+      newGroup.setControlVisible('ml', false);
+      newGroup.setControlVisible('mt', false);
+      newGroup.setControlVisible('mr', false);
+      newGroup.setControlVisible('mb', false);
+
+      tempSelection = new fabric.ActiveSelection([], {canvas: canvas});
+      canvas.discardActiveObject();
+      canvas.requestRenderAll();
+    }
+  }
+  else if (action_type == 2) {
+    if (objectsInCurrentGroup.length > 0) {
+      var newSelection = new fabric.ActiveSelection([], {canvas: canvas});
+      objectsInCurrentGroup.map((object) => {
+        newSelection.addWithUpdate(object);
+      });
+
+      var newGroup = newSelection.toGroup()
+      newGroup.selectable = false;
+      newGroup.setControlVisible('tl', false);
+      newGroup.setControlVisible('tr', false);
+      newGroup.setControlVisible('br', false);
+      newGroup.setControlVisible('bl', false);
+      newGroup.setControlVisible('ml', false);
+      newGroup.setControlVisible('mt', false);
+      newGroup.setControlVisible('mr', false);
+      newGroup.setControlVisible('mb', false);
+      
+      objectsInCurrentGroup = [];
+    }
+    if (tempSelection.size() > 0) {
+      var newGroup = tempSelection.toGroup()
+      newGroup.selectable = false;
+      newGroup.setControlVisible('tl', false);
+      newGroup.setControlVisible('tr', false);
+      newGroup.setControlVisible('br', false);
+      newGroup.setControlVisible('bl', false);
+      newGroup.setControlVisible('ml', false);
+      newGroup.setControlVisible('mt', false);
+      newGroup.setControlVisible('mr', false);
+      newGroup.setControlVisible('mb', false);
+
+      tempSelection = new fabric.ActiveSelection([], {canvas: canvas});
+    }
+    canvas.discardActiveObject();
+    canvas.requestRenderAll();
   }
 });
 
 canvas.on('mouse:wheel', function(options) {
-  var delta = options.e.deltaY;
-  var pointer = canvas.getPointer(options.e);
-  var zoom = canvas.getZoom();
-  zoom = zoom * Math.pow(2, delta / 100);
-  if (zoom > 8) zoom = 8;
-  if (zoom < 0.125) zoom = 0.125;
-  canvas.zoomToPoint({ x: options.e.offsetX, y: options.e.offsetY }, zoom);
-  options.e.preventDefault();
-  options.e.stopPropagation();
+  if (action_type == 0) {
+    var delta = options.e.deltaY;
+    var pointer = canvas.getPointer(options.e);
+    var zoom = canvas.getZoom();
+    zoom = zoom * Math.pow(2, delta / 100);
+    if (zoom > 8) zoom = 8;
+    if (zoom < 0.125) zoom = 0.125;
+    canvas.zoomToPoint({ x: options.e.offsetX, y: options.e.offsetY }, zoom);
+    options.e.preventDefault();
+    options.e.stopPropagation();
+  }
 });
 
-canvas.on('selection:cleared', function(options) {
-  canvas.selection = false;
+$("input[name='action_type_options']").click(function() {
+  action_type = $("input[name='action_type_options']:checked").val();
+  if (action_type == 0) {
+    setSelectable(true);
+  }
+  else {
+    setSelectable(false);
+  }
+  canvas.discardActiveObject();
+  canvas.requestRenderAll();
 });
 
 $('.three').click(function(){
@@ -131,6 +263,12 @@ $('.four').click(function(){
   if (zoom < 0.125) zoom = 0.125;
   canvas.zoomToPoint({ x: canvas.getCenter().left, y: canvas.getCenter().top }, zoom);
 });
+
+function setSelectable(selectable) {
+  canvas.forEachObject(function(object){
+    object.selectable = selectable;
+  });
+}
 
 function resizeCanvas() {
   $( ".canvas-container" ).css("width", window.innerWidth + 'px');
@@ -150,12 +288,12 @@ function resizeCanvas() {
   canvas.setHeight(window.innerHeight);
 }
 
-function moveAllFragments(x, y) {
-  fragments.forEach((fragment) => {
-    fragment.left += (x - initialMouseX) / canvas.getZoom();
-    fragment.top += (y - initialMouseY) / canvas.getZoom();
+function moveAllObjects(x, y) {
+  canvas.forEachObject((object) => {
+    object.left += (x - initialMouseX) / canvas.getZoom();
+    object.top += (y - initialMouseY) / canvas.getZoom();
 
-    fragment.setCoords();
+    object.setCoords();
   });
 
   initialMouseX = x;
@@ -166,23 +304,23 @@ function moveAllFragments(x, y) {
 
 function animate() {
   var isFinishedMove = true;
-  fragments.forEach((fragment) => {
-    if (canvas.getActiveObject() != fragment) {
-      var vx = fragment.vx;
-      var vy = fragment.vy;
+  canvas.forEachObject((object) => {
+    if (canvas.getActiveObject() != object) {
+      var vx = object.vx;
+      var vy = object.vy;
 
-      movingFragments.forEach((movingFragment) => {
-        if (movingFragment != fragment && movingFragment.intersectsWithObject(fragment)) {
-          if (movingFragments.indexOf(fragment) == -1) {
-            movingFragments.push(fragment);
+      movingObjects.forEach((movingObject) => {
+        if (movingObject != object && movingObject.intersectsWithObject(object)) {
+          if (movingObjects.indexOf(object) == -1) {
+            movingObjects.push(object);
             crushCounts.push(1);
           }
           else {
-            crushCounts[movingFragments.indexOf(fragment)] ++;
+            crushCounts[movingObjects.indexOf(object)] ++;
           }
 
-          var dx = fragment.getCenterPoint().x - movingFragment.getCenterPoint().x;
-          var dy = fragment.getCenterPoint().y - movingFragment.getCenterPoint().y;
+          var dx = object.getCenterPoint().x - movingObject.getCenterPoint().x;
+          var dy = object.getCenterPoint().y - movingObject.getCenterPoint().y;
 
           if (dx == 0) dx = 0.001;
           if (dy == 0) dy = 0.001;
@@ -190,8 +328,8 @@ function animate() {
           if (dx / vx < 0) vx = 0;
           if (dy / vy < 0) vy = 0;
 
-          vx += (dx / Math.abs(dx)) * Math.pow(absorptionConst, crushCounts[movingFragments.indexOf(fragment)]);
-          vy += (dy / Math.abs(dy)) * Math.pow(absorptionConst, crushCounts[movingFragments.indexOf(fragment)]);
+          vx += (dx / Math.abs(dx)) * Math.pow(absorptionConst, crushCounts[movingObjects.indexOf(object)]);
+          vy += (dy / Math.abs(dy)) * Math.pow(absorptionConst, crushCounts[movingObjects.indexOf(object)]);
         }
       });
 
@@ -212,13 +350,13 @@ function animate() {
         isFinishedMove = false;
       }
 
-      fragment.left += vx;
-      fragment.top += vy;
+      object.left += vx;
+      object.top += vy;
 
-      fragment.setCoords();
+      object.setCoords();
 
-      fragment.vx = vx;
-      fragment.vy = vy;
+      object.vx = vx;
+      object.vy = vy;
     }
   });
 
@@ -226,7 +364,7 @@ function animate() {
     new fabric.util.requestAnimFrame(animate, canvas.getElement());
   }
   else {
-    movingFragments = [];
+    movingObjects = [];
     crushCounts = [];
   }
 
