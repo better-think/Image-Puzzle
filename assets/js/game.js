@@ -306,8 +306,8 @@ function animate() {
   var isFinishedMove = true;
   canvas.forEachObject((object) => {
     if (canvas.getActiveObject() != object) {
-      var vx = object.vx;
-      var vy = object.vy;
+      var vx = object.vx ? object.vx : 0;
+      var vy = object.vy ? object.vy : 0;
 
       movingObjects.forEach((movingObject) => {
         if (movingObject != object && movingObject.intersectsWithObject(object)) {
