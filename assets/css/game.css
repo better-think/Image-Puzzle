@@ -82,7 +82,7 @@ body {
   width: 240px;
   border-radius: 28px;
   padding: 0 0 0 24px;
-  z-index: 1;
+  z-index: 10;
   background-color: rgba(0,0,0,0.75);
   color: white;
   justify-content: space-between;
@@ -123,7 +123,7 @@ body {
   height: var(--l);
   width: var(--l);
   border-radius: 50%;
-  z-index: 2;
+  z-index: 11;
   margin-bottom: 0;
 }
 
@@ -148,7 +148,7 @@ body {
   height: 2em;
   border-radius: 50%;
   opacity: 0;
-  z-index: 1;
+  z-index: 10;
   transform: rotateZ(90deg);
   font-size: 1em;
   color: #fff;
@@ -184,42 +184,6 @@ body {
 
 .triggerButton:checked ~.one:hover, .triggerButton:checked ~ .two:hover, .triggerButton:checked ~ .three:hover, .triggerButton:checked ~ .four:hover { opacity: .9; }
 
-#intro {
-  position: absolute;
-  z-index: 10;
-  top: 50%;
-  left: 50%;
-  max-width: 600px;
-  width: calc(100% - 20px);
-  height: 300px;
-  border-radius: 5px;
-  transform: translate(-50%, -50%);
-  background-color: white;
-  -webkit-box-shadow: 1px 1px 10px 0px rgba(0,0,0,0.75);
-  -moz-box-shadow: 1px 1px 10px 0px rgba(0,0,0,0.75);
-  box-shadow: 1px 1px 10px 0px rgba(0,0,0,0.75);
-}
-
-#intro-content {
-  height: calc(100% - 48px);
-  padding: 10px;
-}
-
-#intro-button-group-container {
-  padding: 0 10px;
-  display: flex;
-  flex-direction: row-reverse;
-}
-
-#intro-button-group-container button{
-  width: 80px;
-  margin-left: 10px;
-}
-
-#intro-button-group-container button#start_btn{
-  width: 120px;
-}
-
 .ai-tip-slider-container {
   position: absolute;
   display: none;
@@ -228,7 +192,7 @@ body {
   background: white;
   left: 100px;
   top: 70px;
-  z-index: 1;
+  z-index: 10;
   box-shadow: 0px 1px 11px black;
   padding: 5px;
   border-radius: 3px;
