@@ -8,6 +8,7 @@ if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine
 }
 
 var action_type = 0; // 0: Move, 1: Link, 2: Unlink
+var isPanning = false;
 var tempSelection = new fabric.ActiveSelection([], {canvas: canvas});
 
 var objectsInCurrentGroup = [];
@@ -71,12 +72,14 @@ for (var i = 1; i <= total; i ++) {
 }
 
 canvas.on('mouse:down', function(options) {
-  if (action_type == 0) {
+  if (!options.target) {
     if (isMobile) {
+      isPanning = true;
       initialMouseX = options.e.targetTouches[0].screenX;
       initialMouseY = options.e.targetTouches[0].screenY;
     }
     else if (options.e.buttons == 1) {
+      isPanning = true;
       initialMouseX = options.e.offsetX;
       initialMouseY = options.e.offsetY;
     }
@@ -84,20 +87,20 @@ canvas.on('mouse:down', function(options) {
 });
 
 canvas.on('mouse:move', function(options) {
-  if (action_type == 0) {
-    if (!canvas.getActiveObject()) {
-      if (isMobile) {
-        moveAllObjects(options.e.changedTouches[0].screenX, options.e.changedTouches[0].screenY);
-      }
-      else if(options.e.buttons == 1) {
-        moveAllObjects(options.e.offsetX, options.e.offsetY);
-      }
+  if (isPanning) {
+    if (isMobile) {
+      moveAllObjects(options.e.changedTouches[0].screenX, options.e.changedTouches[0].screenY);
+    }
+    else if(options.e.buttons == 1) {
+      moveAllObjects(options.e.offsetX, options.e.offsetY);
     }
   }
   else if (action_type == 1) {
     if (isMobile || options.e.buttons == 1) {
       var target = options.target;
       if (target) {
+        target.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
+        target.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
         if (target.type == 'group') {
           var subObjects = target.getObjects();
           target.toActiveSelection();
@@ -121,6 +124,8 @@ canvas.on('mouse:move', function(options) {
     if (isMobile || options.e.buttons == 1) {
       var target = options.target;
       if (target) {
+        target.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
+        target.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
         if (target.type == 'group') {
           objectsInCurrentGroup = target.getObjects();
           target.toActiveSelection();
@@ -130,7 +135,6 @@ canvas.on('mouse:move', function(options) {
           var tempObjectsInCurrentGroup = objectsInCurrentGroup.slice();
           tempObjectsInCurrentGroup.map((object) => {
             if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY))) {
-              console.log('HIT!');
               objectsInCurrentGroup.splice(objectsInCurrentGroup.indexOf(object), 1);
               tempSelection.addWithUpdate(object);
             }
@@ -157,6 +161,8 @@ canvas.on('mouse:move', function(options) {
 });
 
 canvas.on('mouse:up', function(options) {
+  isPanning = false;
+  
   if (action_type == 0) {
     if(options.e.ctrlKey) {
       if (canvas.getActiveObject()) {
@@ -183,6 +189,11 @@ canvas.on('mouse:up', function(options) {
       tempSelection = new fabric.ActiveSelection([], {canvas: canvas});
       canvas.discardActiveObject();
       canvas.requestRenderAll();
+
+      canvas.forEachObject((object) => {
+        object.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
+        object.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
+      });
     }
   }
   else if (action_type == 2) {
@@ -221,29 +232,46 @@ canvas.on('mouse:up', function(options) {
     }
     canvas.discardActiveObject();
     canvas.requestRenderAll();
+
+    canvas.forEachObject((object) => {
+      object.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
+      object.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
+    });
   }
 });
 
 canvas.on('mouse:wheel', function(options) {
-  if (action_type == 0) {
-    var delta = options.e.deltaY;
-    var pointer = canvas.getPointer(options.e);
-    var zoom = canvas.getZoom();
-    zoom = zoom * Math.pow(2, delta / 100);
-    if (zoom > 8) zoom = 8;
-    if (zoom < 0.125) zoom = 0.125;
-    canvas.zoomToPoint({ x: options.e.offsetX, y: options.e.offsetY }, zoom);
-    options.e.preventDefault();
-    options.e.stopPropagation();
-  }
+  var delta = options.e.deltaY;
+  var zoom = canvas.getZoom();
+  zoom = zoom * Math.pow(2, delta / 100);
+  if (zoom > 8) zoom = 8;
+  if (zoom < 0.125) zoom = 0.125;
+  canvas.zoomToPoint({ x: options.e.offsetX, y: options.e.offsetY }, zoom);
+  options.e.preventDefault();
+  options.e.stopPropagation();
 });
 
 $("input[name='action_type_options']").click(function() {
   action_type = $("input[name='action_type_options']:checked").val();
   if (action_type == 0) {
+    canvas.forEachObject((object) => {
+      object.set('hoverCursor', "move");
+      object.set('moveCursor', "move");
+    });
     setSelectable(true);
   }
-  else {
+  else if (action_type == 1) {
+    canvas.forEachObject((object) => {
+      object.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
+      object.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
+    });
+    setSelectable(false);
+  }
+  else if (action_type == 2) {
+    canvas.forEachObject((object) => {
+      object.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
+      object.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
+    });
     setSelectable(false);
   }
   canvas.discardActiveObject();

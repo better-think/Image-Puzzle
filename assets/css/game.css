@@ -2,6 +2,15 @@ body {
   --l: 3.5em;
 }
 
+.modal-dialog {
+  max-width: calc(100% - 20px);
+  margin: 10px;
+}
+
+.modal-content {
+  height: calc(100vh - 20px);
+}
+
 .floating-bar {
   position: absolute;
   display: flex;
