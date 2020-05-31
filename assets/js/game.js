@@ -1,5 +1,8 @@
 var canvas = new fabric.Canvas('stage');
 
+var ellapseTimer;
+var secondCount = 0;
+
 var isMobile = false;
 
 if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|ipad|iris|kindle|Android|Silk|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i.test(navigator.userAgent) 
@@ -108,12 +111,22 @@ canvas.on('mouse:move', function(options) {
           
           subObjects.map((subObject) => {
             if (!tempSelection.contains(subObject)) {
+              subObject.filters.push(new fabric.Image.filters.BlendColor({
+                color: "#08f8e8"
+              }));
+              subObject.applyFilters();
+              canvas.renderAll();
               tempSelection.addWithUpdate(subObject);
             }
           });
         }
         else {
           if (!tempSelection.contains(target)) {
+            target.filters.push(new fabric.Image.filters.BlendColor({
+              color: "#08f8e8"
+            }));
+            target.applyFilters();
+            canvas.renderAll();
             tempSelection.addWithUpdate(target);
           }
         }
@@ -136,6 +149,11 @@ canvas.on('mouse:move', function(options) {
           tempObjectsInCurrentGroup.map((object) => {
             if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY))) {
               objectsInCurrentGroup.splice(objectsInCurrentGroup.indexOf(object), 1);
+              object.filters.push(new fabric.Image.filters.BlendColor({
+                color: "#08f8e8"
+              }));
+              object.applyFilters();
+              canvas.renderAll();
               tempSelection.addWithUpdate(object);
             }
           });
@@ -174,6 +192,11 @@ canvas.on('mouse:up', function(options) {
   }
   else if (action_type == 1) {
     if (tempSelection.size() > 0) {
+      tempSelection.forEachObject(function(object) {
+        object.filters.pop();
+        object.applyFilters();
+      });
+
       var newGroup = tempSelection.toGroup()
 
       newGroup.selectable = false;
@@ -190,11 +213,13 @@ canvas.on('mouse:up', function(options) {
       canvas.discardActiveObject();
       canvas.requestRenderAll();
 
-      canvas.forEachObject((object) => {
-        object.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
-        object.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
-      });
+      // canvas.forEachObject((object) => {
+      //   object.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
+      //   object.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
+      // });
     }
+
+    changeActionType(0);
   }
   else if (action_type == 2) {
     if (objectsInCurrentGroup.length > 0) {
@@ -217,6 +242,11 @@ canvas.on('mouse:up', function(options) {
       objectsInCurrentGroup = [];
     }
     if (tempSelection.size() > 0) {
+      tempSelection.forEachObject(function(object) {
+        object.filters.pop();
+        object.applyFilters();
+      });
+
       var newGroup = tempSelection.toGroup()
       newGroup.selectable = false;
       newGroup.setControlVisible('tl', false);
@@ -233,10 +263,12 @@ canvas.on('mouse:up', function(options) {
     canvas.discardActiveObject();
     canvas.requestRenderAll();
 
-    canvas.forEachObject((object) => {
-      object.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
-      object.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
-    });
+    // canvas.forEachObject((object) => {
+    //   object.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
+    //   object.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
+    // });
+
+    changeActionType(0);
   }
 });
 
@@ -252,30 +284,12 @@ canvas.on('mouse:wheel', function(options) {
 });
 
 $("input[name='action_type_options']").click(function() {
-  action_type = $("input[name='action_type_options']:checked").val();
-  if (action_type == 0) {
-    canvas.forEachObject((object) => {
-      object.set('hoverCursor', "move");
-      object.set('moveCursor', "move");
-    });
-    setSelectable(true);
+  if ($("input[name='action_type_options']:checked").val() == action_type) {
+    changeActionType(0);
   }
-  else if (action_type == 1) {
-    canvas.forEachObject((object) => {
-      object.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
-      object.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
-    });
-    setSelectable(false);
+  else {
+    changeActionType($("input[name='action_type_options']:checked").val());
   }
-  else if (action_type == 2) {
-    canvas.forEachObject((object) => {
-      object.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
-      object.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
-    });
-    setSelectable(false);
-  }
-  canvas.discardActiveObject();
-  canvas.requestRenderAll();
 });
 
 $('.three').click(function(){
@@ -291,6 +305,49 @@ $('.four').click(function(){
   if (zoom < 0.125) zoom = 0.125;
   canvas.zoomToPoint({ x: canvas.getCenter().left, y: canvas.getCenter().top }, zoom);
 });
+
+function changeActionType(actionType) {
+  action_type = actionType;
+
+  if (action_type == 0) {
+    canvas.forEachObject((object) => {
+      object.set('hoverCursor', "move");
+      object.set('moveCursor', "move");
+    });
+    setSelectable(true);
+
+    $('input[name=action_type_options][value=0]').attr('checked', true);
+    $('label[id="actionTypeLabel1"]').addClass('selected');
+    $('label[id="actionTypeLabel2"]').removeClass('selected');
+    $('label[id="actionTypeLabel3"]').removeClass('selected');
+  }
+  else if (action_type == 1) {
+    canvas.forEachObject((object) => {
+      object.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
+      object.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
+    });
+    setSelectable(false);
+
+    $('input[name=action_type_options][value=1]').attr('checked', true);
+    $('label[id="actionTypeLabel1"]').removeClass('selected');
+    $('label[id="actionTypeLabel2"]').addClass('selected');
+    $('label[id="actionTypeLabel3"]').removeClass('selected');
+  }
+  else if (action_type == 2) {
+    canvas.forEachObject((object) => {
+      object.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
+      object.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
+    });
+    setSelectable(false);
+
+    $('input[name=action_type_options][value=2]').attr('checked', true);
+    $('label[id="actionTypeLabel1"]').removeClass('selected');
+    $('label[id="actionTypeLabel2"]').removeClass('selected');
+    $('label[id="actionTypeLabel3"]').addClass('selected');
+  }
+  canvas.discardActiveObject();
+  canvas.requestRenderAll();
+}
 
 function setSelectable(selectable) {
   canvas.forEachObject(function(object){
@@ -449,7 +506,7 @@ $('#prev_btn').click(function(){
 });
 
 $('#start_btn').click(function(){
-	
+  ellapseTimer = setInterval(countTimeEllapse, 1000);
 });
 
 $('#finish_btn').click(function(){
@@ -541,3 +598,24 @@ $('#robot').click(function(){
 	}
 	$('.tip-list-wrapper ul').html(str);
 });
+
+
+function countTimeEllapse() {
+  secondCount ++;
+  var hh;
+  if (Math.floor(secondCount / 3600) < 10) {
+    hh = ("0" + Math.floor(secondCount / 3600));
+  }
+  else {
+    hh = Math.floor(secondCount / 3600).toString();
+  }
+  var mString = ("00" + Math.floor((secondCount % 3600) / 60));
+  var mm = mString.slice(mString.length - 2);
+  var sString = ("00" + Math.floor(secondCount % 60));
+  var ss = sString.slice(sString.length - 2);
+  document.getElementById("timeEllapse").innerHTML = `${hh}:${mm}:${ss}`;
+}
+
+function clearEllapseTimer() {
+  clearInterval(ellapseTimer);
+}

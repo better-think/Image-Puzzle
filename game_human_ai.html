@@ -16,10 +16,12 @@
         <div class="player">
           <div class="main-player">
             <img src="assets/img/user.png" class="avatar" />
+            <div class="username">张三</div>
           </div>
           <div class="player-separator"></div>
           <div class="assistant-player">
             <img src="assets/img/bot/2.png" class="avatar" id="robot" />
+            <div class="username">小明</div>
             <div class="ai-tip-slider-container">
               <div class="slider-wrapper">
                 <a href="#" id="up"><span class="fa fa-arrow-up"></span></a>   
@@ -35,21 +37,21 @@
           </div>
         </div>
         <div class="btn-group btn-group-toggle action" data-toggle="buttons">
-          <label class="btn btn-secondary active action-button fa fa-hand-paper-o">
+          <label id="actionTypeLabel1" class="btn btn-secondary active action-button fa fa-hand-paper-o" style="display: none;">
             <input type="radio" name="action_type_options" id="option1"  value=0 checked>
           </label>
-          <label class="btn btn-secondary action-button fa fa-link">
+          <label id="actionTypeLabel2" class="btn btn-secondary action-button fa fa-link">
             <input type="radio" name="action_type_options" id="option2" value=1>
           </label>
-          <label class="btn btn-secondary action-button fa fa-unlink">
+          <label id="actionTypeLabel3" class="btn btn-secondary action-button fa fa-unlink">
             <input type="radio" name="action_type_options" id="option3" value=2>
           </label>
         </div>
       </div>
       <div class="record-panel">
         <div class="record">
-          <div class="record-item">World Record: 01:30:55</div>
-          <div class="record-item">Time Ellapse: 00:45:12</div>
+          <div class="record-item">World Record: <span id="worldRecord">04:53:02</div>
+          <div class="record-item">Time Ellapse: <span id="timeEllapse">00:00:00</span></div>
         </div>
         <div class="finish">
           <button class="btn btn-danger finish-button fa fa-check" id="finish_btn"></button>
