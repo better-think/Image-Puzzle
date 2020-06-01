@@ -1,78 +1,74 @@
-var canvas = new fabric.Canvas('stage');
-
-var ellapseTimer;
-var secondCount = 0;
-
 var isMobile = false;
-
 if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|ipad|iris|kindle|Android|Silk|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i.test(navigator.userAgent) 
     || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(navigator.userAgent.substr(0,4))) { 
     isMobile = true;
 }
 
-var action_type = 0; // 0: Move, 1: Link, 2: Unlink
-var isPanning = false;
-var tempSelection = new fabric.ActiveSelection([], {canvas: canvas});
+var canvas = new fabric.Canvas('stage');
 
-var objectsInCurrentGroup = [];
-
-var lowerCanvasElement = document.getElementsByClassName('lower-canvas')[0];
-var upperCanvasElement = document.getElementsByClassName('upper-canvas')[0];
-
-window.addEventListener('resize', resizeCanvas, false);
-
-resizeCanvas();
+var ellapseTimer;
+var secondCount = 0;
 
 var total = 36;
 var fragments = [];
+
+var currentActionType = 0; // 0: Move, 1: Link, 2: Unlink
+
+var tempSelection = new fabric.ActiveSelection([], {canvas: canvas});
+var objectsInCurrentGroup = [];
+
 var movingObjects = [];
 var crushCounts = [];
 var absorptionConst = 0.9;
+
+var isPanning = false;
 var initialMouseX = 0, initialMouseY = 0;
+var initialViewPortTLX = 0, initialViewPortTLY = 0;
 
-canvas.selection = false;
+var actionHistory = [];
+var actionStep = -1;
 
-for (var i = 1; i <= total; i ++) {
-  var fileNumber = `000${i}`;
-  var imageFileName = `fragment_${fileNumber.substring(fileNumber.length - 4)}.png`;
+var tip_count_on_view = 5;
+var ai_tip_arr = [
+	'Do ABC',
+	'Take something',
+	'Move anything',
+	'Rotate everything',
+	'Zoom in and out repeatedly',		
+	'Come here',
+	'Go there',
+	'Dance with her',
+	'Sing with me',
+	'Get on now'
+];
 
-  new fabric.Image.fromURL(`./assets/img/fragments/${imageFileName}`, function(oImg) {
+var introContentId = 0;
+var intro_arr = [
+  {
+    id: 1,
+    content: 'This is just intro 1.'
+  },
+  {
+    id: 2,
+    content: 'This is just intro 2.'
+  },
+  {
+    id: 3,
+    content: 'This is just intro 3.'
+  },
+  {
+    id: 4,
+    content: 'This is just intro 4.'
+  },
+  {
+    id: 5,
+    content: 'This is just intro 5.'
+  }
+];
 
-    var img = oImg.scale(0.2);
+init();
 
-    // add filter
-    img.filters.push(new fabric.Image.filters.RemoveColor({
-      color: "#08f8e8"
-    }));
-
-    // apply filters and re-render canvas when done
-    img.applyFilters();
-
-    img.set({
-      cornerColor: 'red',
-      cornerSize: 10,
-      transparentCorners: false,
-      vx: 0,
-      vy: 0,
-      left: Math.random() * window.innerWidth,
-      top: Math.random() * window.innerHeight
-    });
-
-    img.setControlVisible('tl', false);
-    img.setControlVisible('tr', false);
-    img.setControlVisible('br', false);
-    img.setControlVisible('bl', false);
-    img.setControlVisible('ml', false);
-    img.setControlVisible('mt', false);
-    img.setControlVisible('mr', false);
-    img.setControlVisible('mb', false);
-
-    // add image onto canvas (it also re-render the canvas)
-    canvas.add(img);
-    fragments.push(img);
-
-  }, {crossOrigin: 'anonymous'});
-}
+window.addEventListener('resize', resizeCanvas, false);
 
 canvas.on('mouse:down', function(options) {
   if (!options.target) {
@@ -80,11 +76,15 @@ canvas.on('mouse:down', function(options) {
       isPanning = true;
       initialMouseX = options.e.targetTouches[0].screenX;
       initialMouseY = options.e.targetTouches[0].screenY;
+      initialViewPortTLX = canvas.vptCoords.tl.x;
+      initialViewPortTLY = canvas.vptCoords.tl.y;
     }
     else if (options.e.buttons == 1) {
       isPanning = true;
       initialMouseX = options.e.offsetX;
       initialMouseY = options.e.offsetY;
+      initialViewPortTLX = canvas.vptCoords.tl.x;
+      initialViewPortTLY = canvas.vptCoords.tl.y;
     }
   }
 });
@@ -92,13 +92,23 @@ canvas.on('mouse:down', function(options) {
 canvas.on('mouse:move', function(options) {
   if (isPanning) {
     if (isMobile) {
-      moveAllObjects(options.e.changedTouches[0].screenX, options.e.changedTouches[0].screenY);
+      var newVptTlPoint = new fabric.Point(
+        initialViewPortTLX - (options.e.changedTouches[0].screenX - initialMouseX),
+        initialViewPortTLY - (options.e.changedTouches[0].screenY - initialMouseY)
+      )
+      canvas.absolutePan(newVptTlPoint);
+      canvas.renderAll();
     }
     else if(options.e.buttons == 1) {
-      moveAllObjects(options.e.offsetX, options.e.offsetY);
+      var newVptTlPoint = new fabric.Point(
+        initialViewPortTLX * canvas.getZoom() - (options.e.offsetX - initialMouseX),
+        initialViewPortTLY * canvas.getZoom() - (options.e.offsetY - initialMouseY)
+      )
+      canvas.absolutePan(newVptTlPoint);
+      canvas.renderAll();
     }
   }
-  else if (action_type == 1) {
+  else if (currentActionType == 1) {
     if (isMobile || options.e.buttons == 1) {
       var target = options.target;
       if (target) {
@@ -133,7 +143,7 @@ canvas.on('mouse:move', function(options) {
       }
     }
   }
-  else if (action_type == 2) {
+  else if (currentActionType == 2) {
     if (isMobile || options.e.buttons == 1) {
       var target = options.target;
       if (target) {
@@ -181,7 +191,7 @@ canvas.on('mouse:move', function(options) {
 canvas.on('mouse:up', function(options) {
   isPanning = false;
   
-  if (action_type == 0) {
+  if (currentActionType == 0) {
     if(options.e.ctrlKey) {
       if (canvas.getActiveObject()) {
         movingObjects = [canvas.getActiveObject()];
@@ -189,15 +199,18 @@ canvas.on('mouse:up', function(options) {
         animate();
       }
     }
+    else if(canvas.getActiveObject()) {
+      addCurrentStateToHistory();
+    }
   }
-  else if (action_type == 1) {
+  else if (currentActionType == 1) {
     if (tempSelection.size() > 0) {
       tempSelection.forEachObject(function(object) {
         object.filters.pop();
         object.applyFilters();
       });
 
-      var newGroup = tempSelection.toGroup()
+      var newGroup = tempSelection.toGroup();
 
       newGroup.selectable = false;
       newGroup.setControlVisible('tl', false);
@@ -217,11 +230,13 @@ canvas.on('mouse:up', function(options) {
       //   object.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
       //   object.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
       // });
+
+      addCurrentStateToHistory();
     }
 
     changeActionType(0);
   }
-  else if (action_type == 2) {
+  else if (currentActionType == 2) {
     if (objectsInCurrentGroup.length > 0) {
       var newSelection = new fabric.ActiveSelection([], {canvas: canvas});
       objectsInCurrentGroup.map((object) => {
@@ -268,23 +283,27 @@ canvas.on('mouse:up', function(options) {
     //   object.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
     // });
 
+    addCurrentStateToHistory();
+
     changeActionType(0);
   }
 });
 
 canvas.on('mouse:wheel', function(options) {
-  var delta = options.e.deltaY;
-  var zoom = canvas.getZoom();
-  zoom = zoom * Math.pow(2, delta / 100);
-  if (zoom > 8) zoom = 8;
-  if (zoom < 0.125) zoom = 0.125;
-  canvas.zoomToPoint({ x: options.e.offsetX, y: options.e.offsetY }, zoom);
-  options.e.preventDefault();
-  options.e.stopPropagation();
+  if(options.e.buttons != 1) {
+    var delta = options.e.deltaY;
+    var zoom = canvas.getZoom();
+    zoom = zoom * Math.pow(2, delta / 100);
+    if (zoom > 8) zoom = 8;
+    if (zoom < 0.125) zoom = 0.125;
+    canvas.zoomToPoint({ x: options.e.offsetX, y: options.e.offsetY }, zoom);
+    options.e.preventDefault();
+    options.e.stopPropagation();
+  }
 });
 
 $("input[name='action_type_options']").click(function() {
-  if ($("input[name='action_type_options']:checked").val() == action_type) {
+  if ($("input[name='action_type_options']:checked").val() == currentActionType) {
     changeActionType(0);
   }
   else {
@@ -292,7 +311,15 @@ $("input[name='action_type_options']").click(function() {
   }
 });
 
-$('.three').click(function(){
+$('.one').click(function() {
+  undoAction();
+});
+
+$('.two').click(function() {
+  redoAction();
+});
+
+$('.three').click(function() {
   var zoom = canvas.getZoom();
   zoom = zoom * 2;
   if (zoom > 8) zoom = 8;
@@ -306,41 +333,195 @@ $('.four').click(function(){
   canvas.zoomToPoint({ x: canvas.getCenter().left, y: canvas.getCenter().top }, zoom);
 });
 
-function changeActionType(actionType) {
-  action_type = actionType;
+$('#intro_modal').modal('show');
+$("#intro-content")[0].innerHTML = intro_arr[introContentId].content;
 
-  if (action_type == 0) {
+$('#next_btn').click(function() {
+  introContentId ++;
+  $("#intro-content")[0].innerHTML = intro_arr[introContentId].content;
+	if (introContentId == intro_arr.length - 1) {
+		$(this).attr('disabled','');
+		$('#start_btn').text(' Start Now! ');
+	}
+	$('#prev_btn').removeAttr('disabled');
+});
+
+$('#prev_btn').click(function() {
+  introContentId --;
+  $("#intro-content")[0].innerHTML = intro_arr[introContentId].content;
+	if (introContentId == 0) {
+		$(this).attr('disabled','');
+	}
+  $('#start_btn').text('Skip & Start');
+  $('#next_btn').removeAttr('disabled');
+});
+
+$('#start_btn').click(function() {
+  ellapseTimer = setInterval(countTimeEllapse, 1000);
+});
+
+$('#finish_btn').click(function() {
+	$('#finish_modal').modal('show');
+});
+
+$('#finish_ok_btn').click(function() {
+	
+});
+
+$('#ai_tip_slider').oninput(function() {
+  var str = '';
+  for(var i = this.value - 4; i < this.value; i ++){
+    str += '<li>';
+    str += ai_tip_arr[i];
+    str += '</li>';
+  }
+  $('.list_container ul').html(str);
+});
+
+$('#up').click(function() {
+  if (slider.value < tip_count_on_view) {
+		return;
+	}
+  slider.value -= 1;
+  console.log(slider.value)
+  var str = '';
+	if (slider.value >= tip_count_on_view) {
+		for(var i = slider.value - tip_count_on_view; i < slider.value; i ++){
+			str += '<li>';
+			str += ai_tip_arr[i];
+			str += '</li>';
+		}
+		$('.tip-list-wrapper ul').html(str);
+	}
+});
+
+$('#down').click(function() {
+  if (slider.value > ai_tip_arr.length) {
+		return;
+  }
+  var slider_val = slider.value;
+  slider_val ++;
+  slider.value = slider_val;
+	var str = '';
+	if (slider.value >= tip_count_on_view) {
+		for(var i = slider.value - tip_count_on_view; i < slider.value; i ++){
+			str += '<li>';
+			str += ai_tip_arr[i];
+			str += '</li>';
+		}
+		$('.tip-list-wrapper ul').html(str);
+	}
+});
+
+
+$('#robot').click(function() {
+	if ($('.ai-tip-slider-container').css('display') == 'flex') {
+		$('.ai-tip-slider-container').hide();
+	}
+	else if($('.ai-tip-slider-container').css('display') == 'none'){
+    $('.ai-tip-slider-container').show();
+    $('.ai-tip-slider-container').css('display', 'flex');
+	}
+	$('#ai_tip_slider').css('width',$('#ai_tip_slider').parent().height());
+	var str = '';
+	for(var i = 0; i < tip_count_on_view; i ++){
+		str += '<li>';
+		str += ai_tip_arr[i];
+		str += '</li>';
+	}
+	$('.tip-list-wrapper ul').html(str);
+});
+
+function init() {
+  canvas.selection = false;
+
+  resizeCanvas();
+
+  for (var i = 1; i <= total; i ++) {
+    var fileNumber = `000${i}`;
+    var imageFileName = `fragment_${fileNumber.substring(fileNumber.length - 4)}.png`;
+  
+    new fabric.Image.fromURL(`./assets/img/fragments/${imageFileName}`, function(oImg) {
+  
+      var img = oImg.scale(0.2);
+  
+      // add filter
+      img.filters.push(new fabric.Image.filters.RemoveColor({
+        color: "#08f8e8"
+      }));
+  
+      // apply filters and re-render canvas when done
+      img.applyFilters();
+  
+      img.set({
+        cornerColor: 'red',
+        cornerSize: 10,
+        transparentCorners: false,
+        vx: 0,
+        vy: 0,
+        left: 0,
+        top: 0
+      });
+  
+      img.setControlVisible('tl', false);
+      img.setControlVisible('tr', false);
+      img.setControlVisible('br', false);
+      img.setControlVisible('bl', false);
+      img.setControlVisible('ml', false);
+      img.setControlVisible('mt', false);
+      img.setControlVisible('mr', false);
+      img.setControlVisible('mb', false);
+  
+      // add image onto canvas (it also re-render the canvas)
+      canvas.add(img);
+      fragments.push(img);
+  
+      if (fragments.length == total) {
+        canvas.forEachObject((object) => {
+          reposition(object, 0);
+        });
+        addCurrentStateToHistory();
+      }
+  
+    }, {crossOrigin: 'anonymous'});
+  }
+}
+
+function changeActionType(actionType) {
+  currentActionType = actionType;
+
+  if (currentActionType == 0) {
     canvas.forEachObject((object) => {
       object.set('hoverCursor', "move");
       object.set('moveCursor', "move");
     });
     setSelectable(true);
 
-    $('input[name=action_type_options][value=0]').attr('checked', true);
+    $('input[name=currentActionType_options][value=0]').attr('checked', true);
     $('label[id="actionTypeLabel1"]').addClass('selected');
     $('label[id="actionTypeLabel2"]').removeClass('selected');
     $('label[id="actionTypeLabel3"]').removeClass('selected');
   }
-  else if (action_type == 1) {
+  else if (currentActionType == 1) {
     canvas.forEachObject((object) => {
       object.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
       object.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
     });
     setSelectable(false);
 
-    $('input[name=action_type_options][value=1]').attr('checked', true);
+    $('input[name=currentActionType_options][value=1]').attr('checked', true);
     $('label[id="actionTypeLabel1"]').removeClass('selected');
     $('label[id="actionTypeLabel2"]').addClass('selected');
     $('label[id="actionTypeLabel3"]').removeClass('selected');
   }
-  else if (action_type == 2) {
+  else if (currentActionType == 2) {
     canvas.forEachObject((object) => {
       object.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
       object.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
     });
     setSelectable(false);
 
-    $('input[name=action_type_options][value=2]').attr('checked', true);
+    $('input[name=currentActionType_options][value=2]').attr('checked', true);
     $('label[id="actionTypeLabel1"]').removeClass('selected');
     $('label[id="actionTypeLabel2"]').removeClass('selected');
     $('label[id="actionTypeLabel3"]').addClass('selected');
@@ -371,20 +552,6 @@ function resizeCanvas() {
 
   canvas.setWidth(window.innerWidth);
   canvas.setHeight(window.innerHeight);
-}
-
-function moveAllObjects(x, y) {
-  canvas.forEachObject((object) => {
-    object.left += (x - initialMouseX) / canvas.getZoom();
-    object.top += (y - initialMouseY) / canvas.getZoom();
-
-    object.setCoords();
-  });
-
-  initialMouseX = x;
-  initialMouseY = y;
-
-  canvas.renderAll();
 }
 
 function animate() {
@@ -451,154 +618,54 @@ function animate() {
   else {
     movingObjects = [];
     crushCounts = [];
+    addCurrentStateToHistory();
   }
 
   canvas.renderAll();
 }
 
-
-var intro_arr = [
-  {
-    id: 1,
-    content: 'This is just intro 1.'
-  },
-  {
-    id: 2,
-    content: 'This is just intro 2.'
-  },
-  {
-    id: 3,
-    content: 'This is just intro 3.'
-  },
-  {
-    id: 4,
-    content: 'This is just intro 4.'
-  },
-  {
-    id: 5,
-    content: 'This is just intro 5.'
+function reposition(object, count) {
+  if (count < 8) {
+    var isOverlayed = false;
+    canvas.forEachObject((otherObject) => {
+      if (object != otherObject) {
+        if (object.intersectsWithObject(otherObject)) {
+          isOverlayed = true;
+        }
+      }
+    });
+    if (isOverlayed) {
+      object.set({
+        left: Math.random() * (window.innerWidth - 80),
+        top: Math.random() * (window.innerHeight - 80)
+      });
+      object.setCoords();
+      reposition(object, count + 1);
+    }
   }
-];
-
-var element_id = 0;
-
-$('#intro_modal').modal('show');
-$("#intro-content")[0].innerHTML = intro_arr[element_id].content;
-
-$('#next_btn').click(function(){
-  element_id ++;
-  $("#intro-content")[0].innerHTML = intro_arr[element_id].content;
-	if (element_id == intro_arr.length - 1) {
-		$(this).attr('disabled','');
-		$('#start_btn').text(' Start Now! ');
-	}
-	$('#prev_btn').removeAttr('disabled');
-});
-
-$('#prev_btn').click(function(){
-  element_id --;
-  $("#intro-content")[0].innerHTML = intro_arr[element_id].content;
-	if (element_id == 0) {
-		$(this).attr('disabled','');
-	}
-  $('#start_btn').text('Skip & Start');
-  $('#next_btn').removeAttr('disabled');
-});
-
-$('#start_btn').click(function(){
-  ellapseTimer = setInterval(countTimeEllapse, 1000);
-});
-
-$('#finish_btn').click(function(){
-	$('#finish_modal').modal('show');
-});
-
-$('#finish_ok_btn').click(function(){
-	
-});
-
-
-var ai_tip_arr = [
-	'Do ABC',
-	'Take something',
-	'Move anything',
-	'Rotate everything',
-	'Zoom in and out repeatedly',		
-	'Come here',
-	'Go there',
-	'Dance with her',
-	'Sing with me',
-	'Get on now'
-];
-
-var slider = document.getElementById("ai_tip_slider");
-
-var tip_count_on_view = 5;
-
-slider.oninput = function() {
-  var str = '';
-  for(var i = this.value - 4; i < this.value; i ++){
-    str += '<li>';
-    str += ai_tip_arr[i];
-    str += '</li>';
-  }
-  $('.list_container ul').html(str);
 }
 
-$('#up').click(function(){
-  if (slider.value < tip_count_on_view) {
-		return;
-	}
-  slider.value -= 1;
-  console.log(slider.value)
-  var str = '';
-	if (slider.value >= tip_count_on_view) {
-		for(var i = slider.value - tip_count_on_view; i < slider.value; i ++){
-			str += '<li>';
-			str += ai_tip_arr[i];
-			str += '</li>';
-		}
-		$('.tip-list-wrapper ul').html(str);
-	}
-});
+function addCurrentStateToHistory() {
+  actionHistory = actionHistory.slice(0, actionStep + 1);
+  actionHistory.push(canvas.toJSON());
+  actionStep ++;
+}
 
-$('#down').click(function(){
-  if (slider.value > ai_tip_arr.length) {
-		return;
+function undoAction() {
+  if (actionStep > 0) {
+    actionStep --;
+    canvas.loadFromJSON(actionHistory[actionStep]);
+    canvas.renderAll();
   }
-  var slider_val = slider.value;
-  slider_val ++;
-  slider.value = slider_val;
-	var str = '';
-	if (slider.value >= tip_count_on_view) {
-		for(var i = slider.value - tip_count_on_view; i < slider.value; i ++){
-			str += '<li>';
-			str += ai_tip_arr[i];
-			str += '</li>';
-		}
-		$('.tip-list-wrapper ul').html(str);
-	}
-});
+}
 
-
-$('#robot').click(function(){
-	if ($('.ai-tip-slider-container').css('display') == 'flex') {
-		$('.ai-tip-slider-container').hide();
-	}
-	else if($('.ai-tip-slider-container').css('display') == 'none'){
-    $('.ai-tip-slider-container').show();
-    $('.ai-tip-slider-container').css('display', 'flex');
-	}
-	$('#ai_tip_slider').css('width',$('#ai_tip_slider').parent().height());
-	var str = '';
-	for(var i = 0; i < tip_count_on_view; i ++){
-		str += '<li>';
-		str += ai_tip_arr[i];
-		str += '</li>';
-	}
-	$('.tip-list-wrapper ul').html(str);
-});
-
+function redoAction() {
+  if (actionStep < actionHistory.length - 1) {
+    actionStep ++;
+    canvas.loadFromJSON(actionHistory[actionStep]);
+    canvas.renderAll();
+  }
+}
 
 function countTimeEllapse() {
   secondCount ++;
