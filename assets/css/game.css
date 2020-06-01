@@ -2,12 +2,12 @@ body {
   --l: 3.5em;
 }
 
-#intro_modal .modal-dialog {
+#intro_modal .modal-dialog, #finish_modal .modal-dialog {
   max-width: calc(100% - 20px);
   margin: 10px;
 }
 
-#intro_modal .modal-content {
+#intro_modal .modal-content, #finish_modal .modal-content {
   height: calc(100vh - 20px);
 }
 
