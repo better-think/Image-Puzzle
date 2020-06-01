@@ -240,7 +240,7 @@ body {
 }
 
 #ai_tip_slider{
-  margin-left: 14px;
+  margin-left: 18px;
   margin-top: -30px;
   transform: rotate(90deg);
   transform-origin: left;
@@ -289,7 +289,11 @@ body {
 
 .tip-list-wrapper ul{
   padding-inline-start: 20px;
-  padding: 5px 0 5px 20px;
+  padding: 5px 0 5px 25px;
+}
+
+.tip-list-wrapper ul li{
+  text-align: left;
 }
 
 #up {
