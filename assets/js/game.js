@@ -21,6 +21,7 @@ var movingObjects = [];
 var crushCounts = [];
 var absorptionConst = 0.9;
 
+var isMoving = false;
 var isPanning = false;
 var initialMouseX = 0, initialMouseY = 0;
 var initialViewPortTLX = 0, initialViewPortTLY = 0;
@@ -71,7 +72,14 @@ init();
 window.addEventListener('resize', resizeCanvas, false);
 
 canvas.on('mouse:down', function(options) {
-  if (!options.target) {
+  if (!options.target || canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
+
+    if (options.target) {
+      canvas.discardActiveObject();
+      options.target.selectable = false;
+      canvas.renderAll();
+    }
+
     if (isMobile) {
       isPanning = true;
       initialMouseX = options.e.targetTouches[0].screenX;
@@ -85,6 +93,32 @@ canvas.on('mouse:down', function(options) {
       initialMouseY = options.e.offsetY;
       initialViewPortTLX = canvas.vptCoords.tl.x;
       initialViewPortTLY = canvas.vptCoords.tl.y;
+    }
+  }
+  else if (currentActionType == 2) {
+    if (isMobile || options.e.buttons == 1) {
+      var target = options.target;
+      if (target && !canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
+        target.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
+        target.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
+        if (target.type == 'group') {
+          objectsInCurrentGroup = target.getObjects();
+          target.toActiveSelection();
+          canvas.discardActiveObject();
+          var tempObjectsInCurrentGroup = objectsInCurrentGroup.slice();
+          tempObjectsInCurrentGroup.map((object) => {
+            if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY))) {
+              objectsInCurrentGroup.splice(objectsInCurrentGroup.indexOf(object), 1);
+              object.filters.push(new fabric.Image.filters.BlendColor({
+                color: "#08f8e8"
+              }));
+              object.applyFilters();
+              canvas.renderAll();
+              tempSelection.addWithUpdate(object);
+            }
+          });
+        }
+      }
     }
   }
 });
@@ -108,12 +142,53 @@ canvas.on('mouse:move', function(options) {
       canvas.renderAll();
     }
   }
+  else if (currentActionType == 0) {
+    var target = options.target;
+
+    if (canvas.getActiveObject() && (isMobile || options.e.buttons == 1)) {
+      isMoving = true;
+    }
+    else {
+      if (target && !canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
+        target.set('hoverCursor', 'move');
+        target.set('moveCursor', 'move');
+        target.selectable = true;
+      }
+      else if (target) {
+        target.set('hoverCursor', 'default');
+        target.set('moveCursor', 'default');
+        target.selectable = false;
+
+        canvas.forEachObject((object) => {
+          if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY)) && !canvas.isTargetTransparent(object, options.e.offsetX, options.e.offsetY)) {
+            canvas.bringForward(object);
+          }
+        });
+      }
+    }
+  }
   else if (currentActionType == 1) {
+    var target = options.target;
+
+    if ((target && !canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY))) {
+      target.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
+      target.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
+    }
+    else if (target) {
+      target.set('hoverCursor', 'default');
+      target.set('moveCursor', 'default');
+
+      canvas.forEachObject((object) => {
+        if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY)) && !canvas.isTargetTransparent(object, options.e.offsetX, options.e.offsetY)) {
+          canvas.bringForward(object);
+          object.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
+          object.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
+        }
+      });
+    }
+
     if (isMobile || options.e.buttons == 1) {
-      var target = options.target;
-      if (target) {
-        target.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
-        target.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
+      if (target && !canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
         if (target.type == 'group') {
           var subObjects = target.getObjects();
           target.toActiveSelection();
@@ -144,46 +219,40 @@ canvas.on('mouse:move', function(options) {
     }
   }
   else if (currentActionType == 2) {
+    var target = options.target;
+
+    if (target && !canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
+      target.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
+      target.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
+    }
+    else if (target) {
+      target.set('hoverCursor', 'default');
+      target.set('moveCursor', 'default');
+
+      canvas.forEachObject((object) => {
+        if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY)) && !canvas.isTargetTransparent(object, options.e.offsetX, options.e.offsetY)) {
+          canvas.bringForward(object);
+          object.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
+          object.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
+        }
+      });
+    }
+
     if (isMobile || options.e.buttons == 1) {
-      var target = options.target;
-      if (target) {
-        target.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
-        target.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
-        if (target.type == 'group') {
-          objectsInCurrentGroup = target.getObjects();
-          target.toActiveSelection();
-          canvas.discardActiveObject();
-        }
-        else {
-          var tempObjectsInCurrentGroup = objectsInCurrentGroup.slice();
-          tempObjectsInCurrentGroup.map((object) => {
-            if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY))) {
-              objectsInCurrentGroup.splice(objectsInCurrentGroup.indexOf(object), 1);
-              object.filters.push(new fabric.Image.filters.BlendColor({
-                color: "#08f8e8"
-              }));
-              object.applyFilters();
-              canvas.renderAll();
-              tempSelection.addWithUpdate(object);
-            }
-          });
-        }
+      if (target && !canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
+        var tempObjectsInCurrentGroup = objectsInCurrentGroup.slice();
+        tempObjectsInCurrentGroup.map((object) => {
+          if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY))) {
+            objectsInCurrentGroup.splice(objectsInCurrentGroup.indexOf(object), 1);
+            object.filters.push(new fabric.Image.filters.BlendColor({
+              color: "#08f8e8"
+            }));
+            object.applyFilters();
+            canvas.renderAll();
+            tempSelection.addWithUpdate(object);
+          }
+        });
       }
-      // else {
-      //   if (objectsInCurrentGroup.length > 0) {
-      //     var newSelection = new fabric.ActiveSelection([], {canvas: canvas});
-      //     objectsInCurrentGroup.map((object) => {
-      //       newSelection.addWithUpdate(object);
-      //     });
-      //     newSelection.toGroup().selectable = false;
-      //   }
-      //   if (tempSelection.size() > 0) {
-      //     tempSelection.toGroup().selectable = false;
-      //     tempSelection = new fabric.ActiveSelection([], {canvas: canvas});
-      //   }
-      //   canvas.discardActiveObject();
-      //   canvas.requestRenderAll();
-      // }
     }
   }
 });
@@ -191,8 +260,8 @@ canvas.on('mouse:move', function(options) {
 canvas.on('mouse:up', function(options) {
   isPanning = false;
   
-  if (currentActionType == 0) {
-    if(options.e.ctrlKey) {
+  if (currentActionType == 0 && isMoving) {
+    if(!options.e.ctrlKey) {
       if (canvas.getActiveObject()) {
         movingObjects = [canvas.getActiveObject()];
         crushCounts = [0];
@@ -202,6 +271,7 @@ canvas.on('mouse:up', function(options) {
     else if(canvas.getActiveObject()) {
       addCurrentStateToHistory();
     }
+    isMoving = false;
   }
   else if (currentActionType == 1) {
     if (tempSelection.size() > 0) {
@@ -211,7 +281,9 @@ canvas.on('mouse:up', function(options) {
       });
 
       var newGroup = tempSelection.toGroup();
-
+      newGroup.cornerColor = 'red';
+      newGroup.cornerStrokeColor = 'blue';
+      newGroup.transparentCorners = false;
       newGroup.selectable = false;
       newGroup.setControlVisible('tl', false);
       newGroup.setControlVisible('tr', false);
@@ -226,11 +298,6 @@ canvas.on('mouse:up', function(options) {
       canvas.discardActiveObject();
       canvas.requestRenderAll();
 
-      // canvas.forEachObject((object) => {
-      //   object.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
-      //   object.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
-      // });
-
       addCurrentStateToHistory();
     }
 
@@ -243,8 +310,11 @@ canvas.on('mouse:up', function(options) {
         newSelection.addWithUpdate(object);
       });
 
-      var newGroup = newSelection.toGroup()
+      var newGroup = newSelection.toGroup();
       newGroup.selectable = false;
+      newGroup.cornerColor = 'red';
+      newGroup.cornerStrokeColor = 'blue';
+      newGroup.transparentCorners = false;
       newGroup.setControlVisible('tl', false);
       newGroup.setControlVisible('tr', false);
       newGroup.setControlVisible('br', false);
@@ -262,8 +332,11 @@ canvas.on('mouse:up', function(options) {
         object.applyFilters();
       });
 
-      var newGroup = tempSelection.toGroup()
+      var newGroup = tempSelection.toGroup();
       newGroup.selectable = false;
+      newGroup.cornerColor = 'red';
+      newGroup.cornerStrokeColor = 'blue';
+      newGroup.transparentCorners = false;
       newGroup.setControlVisible('tl', false);
       newGroup.setControlVisible('tr', false);
       newGroup.setControlVisible('br', false);
@@ -277,11 +350,6 @@ canvas.on('mouse:up', function(options) {
     }
     canvas.discardActiveObject();
     canvas.requestRenderAll();
-
-    // canvas.forEachObject((object) => {
-    //   object.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
-    //   object.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
-    // });
 
     addCurrentStateToHistory();
 
@@ -432,6 +500,9 @@ $('#robot').click(function() {
 });
 
 function init() {
+  $('.one').addClass('disabled');
+  $('.two').addClass('disabled');
+
   canvas.selection = false;
 
   resizeCanvas();
@@ -459,7 +530,10 @@ function init() {
         vx: 0,
         vy: 0,
         left: 0,
-        top: 0
+        top: 0,
+        hoverCursor: 'default',
+        moveCursor: 'default',
+        cornerStrokeColor: 'blue'
       });
   
       img.setControlVisible('tl', false);
@@ -489,11 +563,12 @@ function init() {
 function changeActionType(actionType) {
   currentActionType = actionType;
 
+  canvas.forEachObject((object) => {
+    object.set('hoverCursor', 'default');
+    object.set('moveCursor', 'default');
+  });
+
   if (currentActionType == 0) {
-    canvas.forEachObject((object) => {
-      object.set('hoverCursor', "move");
-      object.set('moveCursor', "move");
-    });
     setSelectable(true);
 
     $('input[name=currentActionType_options][value=0]').attr('checked', true);
@@ -502,10 +577,6 @@ function changeActionType(actionType) {
     $('label[id="actionTypeLabel3"]').removeClass('selected');
   }
   else if (currentActionType == 1) {
-    canvas.forEachObject((object) => {
-      object.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
-      object.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
-    });
     setSelectable(false);
 
     $('input[name=currentActionType_options][value=1]').attr('checked', true);
@@ -514,10 +585,6 @@ function changeActionType(actionType) {
     $('label[id="actionTypeLabel3"]').removeClass('selected');
   }
   else if (currentActionType == 2) {
-    canvas.forEachObject((object) => {
-      object.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
-      object.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
-    });
     setSelectable(false);
 
     $('input[name=currentActionType_options][value=2]').attr('checked', true);
@@ -646,23 +713,36 @@ function reposition(object, count) {
 
 function addCurrentStateToHistory() {
   actionHistory = actionHistory.slice(0, actionStep + 1);
-  actionHistory.push(canvas.toJSON());
+  actionHistory.push(canvas.toJSON(['cornerSize', 'cornerColor', 'cornerStrokeColor', 'transparentCorners']));
   actionStep ++;
+  if (actionStep > 0) {
+    $('.one').removeClass('disabled');
+  }
 }
 
 function undoAction() {
   if (actionStep > 0) {
     actionStep --;
+    if (actionStep == 0) {
+      $('.one').addClass('disabled');
+    }
+    $('.two').removeClass('disabled');
     canvas.loadFromJSON(actionHistory[actionStep]);
     canvas.renderAll();
+    changeActionType(0);
   }
 }
 
 function redoAction() {
   if (actionStep < actionHistory.length - 1) {
     actionStep ++;
+    if (actionStep == actionHistory.length - 1) {
+      $('.two').addClass('disabled');
+    }
+    $('.one').removeClass('disabled');
     canvas.loadFromJSON(actionHistory[actionStep]);
     canvas.renderAll();
+    changeActionType(0);
   }
 }
 

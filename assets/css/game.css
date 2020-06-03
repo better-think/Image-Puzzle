@@ -207,7 +207,7 @@ body {
 }
 
 .triggerButton:checked ~ .two {
-  background-color: slateblue;
+  background-color: blueviolet;
   transform: translateX(-4.5em) translateY(-2.6em);
   transition-delay: .2s;
 }
@@ -221,6 +221,10 @@ body {
 .triggerButton:checked ~ .four {
   background-color: slateblue;
   transform: translateY(-5em);
+}
+
+.triggerButton:checked ~ .disabled {
+  background-color: lightgray;
 }
 
 .triggerButton:checked ~.one:hover, .triggerButton:checked ~ .two:hover, .triggerButton:checked ~ .three:hover, .triggerButton:checked ~ .four:hover { opacity: .9; }
