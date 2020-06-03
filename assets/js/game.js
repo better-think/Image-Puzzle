@@ -367,6 +367,17 @@ canvas.on('mouse:wheel', function(options) {
     canvas.zoomToPoint({ x: options.e.offsetX, y: options.e.offsetY }, zoom);
     options.e.preventDefault();
     options.e.stopPropagation();
+
+    if (zoom == 8) {
+      $('.three').addClass('disabled');
+    }
+    else if (zoom == 0.125) {
+      $('.four').addClass('disabled');
+    }
+    else {
+      $('.three').removeClass('disabled');
+      $('.four').removeClass('disabled');
+    }
   }
 });
 
@@ -392,6 +403,11 @@ $('.three').click(function() {
   zoom = zoom * 2;
   if (zoom > 8) zoom = 8;
   canvas.zoomToPoint({ x: canvas.getCenter().left, y: canvas.getCenter().top }, zoom);
+
+  if (zoom == 8) {
+    $('.three').addClass('disabled');
+  }
+  $('.four').removeClass('disabled');
 });
 
 $('.four').click(function(){
@@ -399,6 +415,11 @@ $('.four').click(function(){
   zoom = zoom / 2;
   if (zoom < 0.125) zoom = 0.125;
   canvas.zoomToPoint({ x: canvas.getCenter().left, y: canvas.getCenter().top }, zoom);
+
+  if (zoom == 0.125) {
+    $('.four').addClass('disabled');
+  }
+  $('.three').removeClass('disabled');
 });
 
 $('#intro_modal').modal('show');
@@ -718,6 +739,7 @@ function addCurrentStateToHistory() {
   if (actionStep > 0) {
     $('.one').removeClass('disabled');
   }
+  $('.two').addClass('disabled');
 }
 
 function undoAction() {
@@ -727,9 +749,20 @@ function undoAction() {
       $('.one').addClass('disabled');
     }
     $('.two').removeClass('disabled');
-    canvas.loadFromJSON(actionHistory[actionStep]);
-    canvas.renderAll();
-    changeActionType(0);
+    canvas.loadFromJSON(actionHistory[actionStep], () => {
+      canvas.forEachObject((object) => {
+        object.setControlVisible('tl', false);
+        object.setControlVisible('tr', false);
+        object.setControlVisible('br', false);
+        object.setControlVisible('bl', false);
+        object.setControlVisible('ml', false);
+        object.setControlVisible('mt', false);
+        object.setControlVisible('mr', false);
+        object.setControlVisible('mb', false);
+      });
+      canvas.renderAll();
+      changeActionType(0);
+    });
   }
 }
 
@@ -740,9 +773,20 @@ function redoAction() {
       $('.two').addClass('disabled');
     }
     $('.one').removeClass('disabled');
-    canvas.loadFromJSON(actionHistory[actionStep]);
-    canvas.renderAll();
-    changeActionType(0);
+    canvas.loadFromJSON(actionHistory[actionStep], () => {
+      canvas.forEachObject((object) => {
+        object.setControlVisible('tl', false);
+        object.setControlVisible('tr', false);
+        object.setControlVisible('br', false);
+        object.setControlVisible('bl', false);
+        object.setControlVisible('ml', false);
+        object.setControlVisible('mt', false);
+        object.setControlVisible('mr', false);
+        object.setControlVisible('mb', false);
+      });
+      canvas.renderAll();
+      changeActionType(0);
+    });
   }
 }
 
