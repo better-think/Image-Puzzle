@@ -70,6 +70,7 @@ var intro_arr = [
 init();
 
 window.addEventListener('resize', resizeCanvas, false);
+window.addEventListener('keypress', handleKeyPress);
 
 canvas.on('mouse:down', function(options) {
   if (!options.target || canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
@@ -787,6 +788,17 @@ function redoAction() {
       canvas.renderAll();
       changeActionType(0);
     });
+  }
+}
+
+function handleKeyPress(e) {
+  if (e.ctrlKey) {
+    if (e.keyCode == 25) {
+      redoAction();
+    }
+    else if (e.keyCode == 26) {
+      undoAction();
+    }
   }
 }
 
