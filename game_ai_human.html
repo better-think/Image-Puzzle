@@ -25,13 +25,13 @@
           </div>
         </div>
         <div class="btn-group btn-group-toggle action" data-toggle="buttons">
-          <label id="actionTypeLabel1" class="btn btn-secondary active action-button fa fa-hand-paper-o" style="display: none;">
+          <label id="actionTypeLabel1" class="btn btn-secondary selected action-button fa fa-hand-paper-o" style="display: none;" data-toggle="tooltip" data-placement="bottom" title="Move">
             <input type="radio" name="action_type_options" id="option1"  value=0 checked>
           </label>
-          <label id="actionTypeLabel2" class="btn btn-secondary action-button fa fa-link">
+          <label id="actionTypeLabel2" class="btn btn-secondary action-button fa fa-link" data-toggle="tooltip" data-placement="bottom" title="Link">
             <input type="radio" name="action_type_options" id="option2" value=1>
           </label>
-          <label id="actionTypeLabel3" class="btn btn-secondary action-button fa fa-unlink">
+          <label id="actionTypeLabel3" class="btn btn-secondary action-button fa fa-unlink" data-toggle="tooltip" data-placement="bottom" title="Unlink">
             <input type="radio" name="action_type_options" id="option3" value=2>
           </label>
         </div>
@@ -41,19 +41,19 @@
           <div class="record-item">World Record: <span id="worldRecord">04:53:02</div>
           <div class="record-item">Time Ellapse: <span id="timeEllapse">00:00:00</span></div>
         </div>
-        <div class="finish">
+        <div class="finish" data-toggle="tooltip" data-placement="top" title="Finish">
           <div class="btn btn-danger finish-button fa fa-check" id="finish_btn"></div>
         </div>
       </div>
       <canvas id="stage"></canvas>
       <input id="triggerButton" class="triggerButton" type="checkbox" />
-      <label for="triggerButton">
+      <label for="triggerButton" data-toggle="tooltip" data-placement="top" title="Click for additional actions">
         <div class="trigger-button-icon fa fa-hand-o-right"></div>
       </label>
-      <div class="one fa fa-arrow-left"></div>
-      <div class="two fa fa-arrow-right"></div>
-      <div class="three fa fa-plus"></div>
-      <div class="four fa fa-minus"></div>
+      <div class="one fa fa-arrow-left" data-toggle="tooltip" data-placement="top" title="Undo"></div>
+      <div class="two fa fa-arrow-right" data-toggle="tooltip" data-placement="top" title="Redo"></div>
+      <div class="three fa fa-plus" data-toggle="tooltip" data-placement="top" title="Zoom In"></div>
+      <div class="four fa fa-minus" data-toggle="tooltip" data-placement="top" title="Zoom Out"></div>
 
       <div class="modal fade" id="intro_modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

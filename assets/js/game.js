@@ -1,4 +1,4 @@
-var isMobile = false;
+var isMobile = false; // is current environment mobile
 if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|ipad|iris|kindle|Android|Silk|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i.test(navigator.userAgent) 
     || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(navigator.userAgent.substr(0,4))) { 
     isMobile = true;
@@ -6,34 +6,34 @@ if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine
 
 var canvas = new fabric.Canvas('stage');
 
-var ellapseTimer;
-var secondCount = 0;
+var ellapseTimer; // timer for ellapsed time
+var secondCount = 0; // time ellapse in seconds
 
-var total = 36;
-var fragments = [];
+var total = 36; // total count of image fragments
+var fragments = []; // image fragments
 
 var currentActionType = 0; // 0: Move, 1: Link, 2: Unlink
 
-var tempSelection = new fabric.ActiveSelection([], {canvas: canvas});
-var objectsInCurrentGroup = [];
+var tempSelection = new fabric.ActiveSelection([], {canvas: canvas}); // temporary selection used for link and unlink
+var objectsInCurrentGroup = []; // group containing left fragments when unlinking
 
-var movingObjects = [];
-var crushCounts = [];
+var movingObjects = []; // moving objents when animation is going on
+var crushCounts = []; // each objects' crush counts with other objects
 var absorptionConst = 0.9;
 
-var isMovingObject = false;
-var isPanning = false;
-var initialMouseX = 0, initialMouseY = 0;
-var initialViewPortTLX = 0, initialViewPortTLY = 0;
-var initialSelectedObjectCenterX = 0, initialSelectedObjectCenterY = 0;
+var isMovingObject = false; // is moving a object currently by mouse
+var isPanningViewport = false; // is panning viewport currently by mouse
+var initialMouseX = 0, initialMouseY = 0; // x and y of initial mousedown point
+var initialViewPortTLX = 0, initialViewPortTLY = 0; // x and y of initial viewport top-left point when mousedown
+var initialSelectedObjectCenterX = 0, initialSelectedObjectCenterY = 0; // x and y of initial center point of selected when mousedown
 
-var logItem = {};
+var logItem = {}; // log item for current action
 
-var actionHistory = [];
-var actionStep = -1;
+var actionHistory = []; // history of action
+var actionStep = -1; // current action step
 
-var tip_count_on_view = 5;
-var ai_tip_arr = [
+var tip_count_on_view = 5; // count of AI's tips to display on tip menu
+var ai_tip_arr = [ // AI's tip list
 	'Do ABC',
 	'Take something',
 	'Move anything',
@@ -46,8 +46,8 @@ var ai_tip_arr = [
 	'Get on now'
 ];
 
-var introContentId = 0;
-var intro_arr = [
+var introContentId = 0; // index of introduction to display currently
+var intro_arr = [ // count of introductions to display before starting game
   {
     id: 1,
     content: 'This is just intro 1.'
@@ -73,7 +73,7 @@ var intro_arr = [
 init();
 
 window.addEventListener('resize', resizeCanvas, false);
-window.addEventListener('keypress', handleKeyPress);
+window.addEventListener('keydown', handleKeyDown);
 
 canvas.on('object:moved', function(options) {
   logItem.action = 'move';
@@ -81,9 +81,9 @@ canvas.on('object:moved', function(options) {
   logItem.original = {};
   logItem.original.centerX = options.target.getCenterPoint().x - (options.target.left - options.transform.original.left);
   logItem.original.centerY = options.target.getCenterPoint().y - (options.target.top - options.transform.original.top);
-  logItem.transform = {};
-  logItem.transform.centerX = options.target.getCenterPoint().x;
-  logItem.transform.centerY = options.target.getCenterPoint().y;
+  logItem.transformed = {};
+  logItem.transformed.centerX = options.target.getCenterPoint().x;
+  logItem.transformed.centerY = options.target.getCenterPoint().y;
   console.log(logItem);
 });
 
@@ -92,8 +92,8 @@ canvas.on('object:rotated', function(options) {
   logItem.object = options.target;
   logItem.original = {};
   logItem.original.angle = options.transform.original.angle;
-  logItem.transform = {};
-  logItem.transform.angle = options.target.angle;
+  logItem.transformed = {};
+  logItem.transformed.angle = options.target.angle;
   console.log(logItem);
 });
 
@@ -108,14 +108,14 @@ canvas.on('mouse:down:before', function(options) {
 canvas.on('mouse:down', function(options) {
   if (!options.target || canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
     if (isMobile) {
-      isPanning = true;
+      isPanningViewport = true;
       initialMouseX = options.e.targetTouches[0].screenX;
       initialMouseY = options.e.targetTouches[0].screenY;
       initialViewPortTLX = canvas.vptCoords.tl.x;
       initialViewPortTLY = canvas.vptCoords.tl.y;
     }
     else if (options.e.buttons == 1) {
-      isPanning = true;
+      isPanningViewport = true;
       initialMouseX = options.e.offsetX;
       initialMouseY = options.e.offsetY;
       initialViewPortTLX = canvas.vptCoords.tl.x;
@@ -158,7 +158,7 @@ canvas.on('mouse:down', function(options) {
 });
 
 canvas.on('mouse:move', function(options) {
-  if (isPanning) {
+  if (isPanningViewport) {
     if (isMobile) {
       var newVptTlPoint = new fabric.Point(
         initialViewPortTLX - (options.e.changedTouches[0].screenX - initialMouseX),
@@ -294,7 +294,7 @@ canvas.on('mouse:move', function(options) {
 });
 
 canvas.on('mouse:up', function(options) {
-  isPanning = false;
+  isPanningViewport = false;
   
   if (currentActionType == 0 && isMovingObject) {
     if(!options.e.ctrlKey) {
@@ -443,27 +443,11 @@ $('.two').click(function() {
 });
 
 $('.three').click(function() {
-  var zoom = canvas.getZoom();
-  zoom = zoom * 2;
-  if (zoom > 8) zoom = 8;
-  canvas.zoomToPoint({ x: canvas.getCenter().left, y: canvas.getCenter().top }, zoom);
-
-  if (zoom == 8) {
-    $('.three').addClass('disabled');
-  }
-  $('.four').removeClass('disabled');
+  zoomIn();
 });
 
 $('.four').click(function(){
-  var zoom = canvas.getZoom();
-  zoom = zoom / 2;
-  if (zoom < 0.125) zoom = 0.125;
-  canvas.zoomToPoint({ x: canvas.getCenter().left, y: canvas.getCenter().top }, zoom);
-
-  if (zoom == 0.125) {
-    $('.four').addClass('disabled');
-  }
-  $('.three').removeClass('disabled');
+  zoomOut()
 });
 
 $('#intro_modal').modal('show');
@@ -599,6 +583,7 @@ function init() {
         hoverCursor: 'default',
         moveCursor: 'default',
         cornerStrokeColor: 'blue',
+        visible: false,
         custom_id: i
       });
   
@@ -759,6 +744,13 @@ function animate() {
 function reposition(object, count) {
   if (count < 8) {
     var isOverlayed = false;
+
+    object.set({
+      left: Math.random() * (window.innerWidth - 80),
+      top: Math.random() * (window.innerHeight - 80)
+    });
+    object.setCoords();
+
     canvas.forEachObject((otherObject) => {
       if (object != otherObject) {
         if (object.intersectsWithObject(otherObject)) {
@@ -767,12 +759,12 @@ function reposition(object, count) {
       }
     });
     if (isOverlayed) {
-      object.set({
-        left: Math.random() * (window.innerWidth - 80),
-        top: Math.random() * (window.innerHeight - 80)
-      });
-      object.setCoords();
       reposition(object, count + 1);
+    }
+    else {
+      object.set({
+        visible: true
+      });
     }
   }
 }
@@ -835,13 +827,43 @@ function redoAction() {
   }
 }
 
-function handleKeyPress(e) {
+function zoomIn() {
+  var zoom = canvas.getZoom();
+  zoom = zoom * 2;
+  if (zoom > 8) zoom = 8;
+  canvas.zoomToPoint({ x: canvas.getCenter().left, y: canvas.getCenter().top }, zoom);
+
+  if (zoom == 8) {
+    $('.three').addClass('disabled');
+  }
+  $('.four').removeClass('disabled');
+}
+
+function zoomOut() {
+  var zoom = canvas.getZoom();
+  zoom = zoom / 2;
+  if (zoom < 0.125) zoom = 0.125;
+  canvas.zoomToPoint({ x: canvas.getCenter().left, y: canvas.getCenter().top }, zoom);
+
+  if (zoom == 0.125) {
+    $('.four').addClass('disabled');
+  }
+  $('.three').removeClass('disabled');
+}
+
+function handleKeyDown(e) {
   if (e.ctrlKey) {
     if (e.keyCode == 25) {
       redoAction();
     }
     else if (e.keyCode == 26) {
       undoAction();
+    }
+    else if (e.keyCode == 38) {
+      zoomIn();
+    }
+    else if (e.keyCode == 40) {
+      zoomOut();
     }
   }
 }
