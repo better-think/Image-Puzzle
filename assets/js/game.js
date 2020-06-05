@@ -853,10 +853,10 @@ function zoomOut() {
 
 function handleKeyDown(e) {
   if (e.ctrlKey) {
-    if (e.keyCode == 25) {
+    if (e.keyCode == 89) {
       redoAction();
     }
-    else if (e.keyCode == 26) {
+    else if (e.keyCode == 90) {
       undoAction();
     }
     else if (e.keyCode == 38) {
