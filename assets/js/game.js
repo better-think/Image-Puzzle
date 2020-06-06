@@ -443,6 +443,11 @@ $("input[name='action_type_options']").click(function() {
   }
 });
 
+$("input[name='split_options']").click(function() {
+  splitMode = $("input[name='split_options']:checked").val();
+  resizeCanvas();
+});
+
 $('.one').click(function() {
   undoAction();
 });
@@ -666,6 +671,8 @@ function resizeCanvas() {
   if (window.location.pathname == '/game_human.html' || splitMode == 'single') {
     $( ".stage" ).css("display", "block");
 
+    $( ".spliter" ).css("display", "none");
+
     $( ".canvas-container:nth-child(1)" ).css("width", window.innerWidth + 'px');
     $( ".canvas-container:nth-child(1)" ).css("height", window.innerHeight + 'px');
 
@@ -679,7 +686,7 @@ function resizeCanvas() {
     $( ".canvas-container:nth-child(1) .upper-canvas" ).css("width", window.innerWidth + 'px');
     $( ".canvas-container:nth-child(1) .upper-canvas" ).css("height", window.innerHeight + 'px');
 
-    $( ".canvas-container:nth-child(2)" ).css("display", "none");
+    $( ".canvas-container:nth-child(3)" ).css("display", "none");
 
     main_canvas.setWidth(window.innerWidth);
     main_canvas.setHeight(window.innerHeight);
@@ -687,6 +694,7 @@ function resizeCanvas() {
   else if (splitMode == 'vertical'){
     $( ".stage" ).css("display", "flex");
 
+    $( ".spliter" ).css("display", "block");
     $( ".spliter" ).css("height", "100vh");
     $( ".spliter" ).css("width", "4px");
 
@@ -727,6 +735,7 @@ function resizeCanvas() {
   else if (splitMode == 'horizontal'){
     $( ".stage" ).css("display", "block");
 
+    $( ".spliter" ).css("display", "block");
     $( ".spliter" ).css("height", "4px");
     $( ".spliter" ).css("width", "100%");
 

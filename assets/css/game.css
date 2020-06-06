@@ -11,6 +11,17 @@ body {
   height: calc(100vh - 20px);
 }
 
+.split-mode {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 10;
+}
+
+.split-mode label.btn.focus, .split-mode label.btn:focus, .split-mode label.btn.active, .split-mode label.btn:active {
+  box-shadow: none;
+}
+
 .floating-bar {
   position: absolute;
   display: flex;
