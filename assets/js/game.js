@@ -4,7 +4,10 @@ if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine
     isMobile = true;
 }
 
-var canvas = new fabric.Canvas('stage');
+var splitMode = 'vertical';
+
+var main_canvas = new fabric.Canvas('main-stage');
+var extra_canvas = new fabric.Canvas('extra-stage');
 
 var ellapseTimer; // timer for ellapsed time
 var secondCount = 0; // time ellapse in seconds
@@ -14,7 +17,7 @@ var fragments = []; // image fragments
 
 var currentActionType = 0; // 0: Move, 1: Link, 2: Unlink
 
-var tempSelection = new fabric.ActiveSelection([], {canvas: canvas}); // temporary selection used for link and unlink
+var tempSelection = new fabric.ActiveSelection([], {canvas: main_canvas}); // temporary selection used for link and unlink
 var objectsInCurrentGroup = []; // group containing left fragments when unlinking
 
 var movingObjects = []; // moving objents when animation is going on
@@ -75,7 +78,7 @@ init();
 window.addEventListener('resize', resizeCanvas, false);
 window.addEventListener('keydown', handleKeyDown);
 
-canvas.on('object:moved', function(options) {
+main_canvas.on('object:moved', function(options) {
   logItem.action = 'move';
   logItem.object = options.target;
   logItem.original = {};
@@ -87,7 +90,7 @@ canvas.on('object:moved', function(options) {
   console.log(logItem);
 });
 
-canvas.on('object:rotated', function(options) {
+main_canvas.on('object:rotated', function(options) {
   logItem.action = 'rotate';
   logItem.object = options.target;
   logItem.original = {};
@@ -97,29 +100,29 @@ canvas.on('object:rotated', function(options) {
   console.log(logItem);
 });
 
-canvas.on('mouse:down:before', function(options) {
-  if (options.target && canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
-    canvas.discardActiveObject();
+main_canvas.on('mouse:down:before', function(options) {
+  if (options.target && main_canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
+    main_canvas.discardActiveObject();
     options.target.selectable = false;
-    canvas.renderAll();
+    main_canvas.renderAll();
   }
 });
 
-canvas.on('mouse:down', function(options) {
-  if (!options.target || canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
+main_canvas.on('mouse:down', function(options) {
+  if (!options.target || main_canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
     if (isMobile) {
       isPanningViewport = true;
       initialMouseX = options.e.targetTouches[0].screenX;
       initialMouseY = options.e.targetTouches[0].screenY;
-      initialViewPortTLX = canvas.vptCoords.tl.x;
-      initialViewPortTLY = canvas.vptCoords.tl.y;
+      initialViewPortTLX = main_canvas.vptCoords.tl.x;
+      initialViewPortTLY = main_canvas.vptCoords.tl.y;
     }
     else if (options.e.buttons == 1) {
       isPanningViewport = true;
       initialMouseX = options.e.offsetX;
       initialMouseY = options.e.offsetY;
-      initialViewPortTLX = canvas.vptCoords.tl.x;
-      initialViewPortTLY = canvas.vptCoords.tl.y;
+      initialViewPortTLX = main_canvas.vptCoords.tl.x;
+      initialViewPortTLY = main_canvas.vptCoords.tl.y;
     }
   }
   else if (currentActionType == 1) {
@@ -139,7 +142,7 @@ canvas.on('mouse:down', function(options) {
 
         objectsInCurrentGroup = target.getObjects();
         target.toActiveSelection();
-        canvas.discardActiveObject();
+        main_canvas.discardActiveObject();
         var tempObjectsInCurrentGroup = objectsInCurrentGroup.slice();
         tempObjectsInCurrentGroup.map((object) => {
           if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY))) {
@@ -148,7 +151,7 @@ canvas.on('mouse:down', function(options) {
               color: "#08f8e8"
             }));
             object.applyFilters();
-            canvas.renderAll();
+            main_canvas.renderAll();
             tempSelection.addWithUpdate(object);
           }
         });
@@ -157,33 +160,39 @@ canvas.on('mouse:down', function(options) {
   }
 });
 
-canvas.on('mouse:move', function(options) {
+main_canvas.on('mouse:move', function(options) {
   if (isPanningViewport) {
     if (isMobile) {
       var newVptTlPoint = new fabric.Point(
         initialViewPortTLX - (options.e.changedTouches[0].screenX - initialMouseX),
         initialViewPortTLY - (options.e.changedTouches[0].screenY - initialMouseY)
       )
-      canvas.absolutePan(newVptTlPoint);
-      canvas.renderAll();
+      main_canvas.absolutePan(newVptTlPoint);
+      main_canvas.renderAll();
     }
     else if(options.e.buttons == 1) {
-      var newVptTlPoint = new fabric.Point(
-        initialViewPortTLX * canvas.getZoom() - (options.e.offsetX - initialMouseX),
-        initialViewPortTLY * canvas.getZoom() - (options.e.offsetY - initialMouseY)
-      )
-      canvas.absolutePan(newVptTlPoint);
-      canvas.renderAll();
+      var mainCanvasIndex = 1;
+      if (window.location.pathname == '/game_ai_human.html') {
+        mainCanvasIndex = 3;
+      }
+      if ($( `.canvas-container:nth-child(${mainCanvasIndex}) .upper-canvas` )[0] == options.e.target) {
+        var newVptTlPoint = new fabric.Point(
+          initialViewPortTLX * main_canvas.getZoom() - (options.e.offsetX - initialMouseX),
+          initialViewPortTLY * main_canvas.getZoom() - (options.e.offsetY - initialMouseY)
+        )
+        main_canvas.absolutePan(newVptTlPoint);
+        main_canvas.renderAll();
+      }
     }
   }
   else if (currentActionType == 0) {
     var target = options.target;
 
-    if (canvas.getActiveObject() && (isMobile || options.e.buttons == 1)) {
+    if (main_canvas.getActiveObject() && (isMobile || options.e.buttons == 1)) {
       isMovingObject = true;
     }
     else {
-      if (target && !canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
+      if (target && !main_canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
         target.set('hoverCursor', 'move');
         target.set('moveCursor', 'move');
         target.selectable = true;
@@ -193,9 +202,9 @@ canvas.on('mouse:move', function(options) {
         target.set('moveCursor', 'default');
         target.selectable = false;
 
-        canvas.forEachObject((object) => {
-          if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY)) && !canvas.isTargetTransparent(object, options.e.offsetX, options.e.offsetY)) {
-            canvas.bringForward(object);
+        main_canvas.forEachObject((object) => {
+          if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY)) && !main_canvas.isTargetTransparent(object, options.e.offsetX, options.e.offsetY)) {
+            main_canvas.bringForward(object);
           }
         });
       }
@@ -204,7 +213,7 @@ canvas.on('mouse:move', function(options) {
   else if (currentActionType == 1) {
     var target = options.target;
 
-    if ((target && !canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY))) {
+    if ((target && !main_canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY))) {
       target.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
       target.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
     }
@@ -212,9 +221,9 @@ canvas.on('mouse:move', function(options) {
       target.set('hoverCursor', 'default');
       target.set('moveCursor', 'default');
 
-      canvas.forEachObject((object) => {
-        if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY)) && !canvas.isTargetTransparent(object, options.e.offsetX, options.e.offsetY)) {
-          canvas.bringForward(object);
+      main_canvas.forEachObject((object) => {
+        if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY)) && !main_canvas.isTargetTransparent(object, options.e.offsetX, options.e.offsetY)) {
+          main_canvas.bringForward(object);
           object.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
           object.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
         }
@@ -222,12 +231,12 @@ canvas.on('mouse:move', function(options) {
     }
 
     if (isMobile || options.e.buttons == 1) {
-      if (target && !canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
+      if (target && !main_canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
         if (target.type == 'group') {
           logItem.objects.push({type: 'group', objects: target.getObjects()});
           var subObjects = target.getObjects();
           target.toActiveSelection();
-          canvas.discardActiveObject();
+          main_canvas.discardActiveObject();
           
           subObjects.map((subObject) => {
             if (!tempSelection.contains(subObject)) {
@@ -235,7 +244,7 @@ canvas.on('mouse:move', function(options) {
                 color: "#08f8e8"
               }));
               subObject.applyFilters();
-              canvas.renderAll();
+              main_canvas.renderAll();
               tempSelection.addWithUpdate(subObject);
             }
           });
@@ -247,7 +256,7 @@ canvas.on('mouse:move', function(options) {
               color: "#08f8e8"
             }));
             target.applyFilters();
-            canvas.renderAll();
+            main_canvas.renderAll();
             tempSelection.addWithUpdate(target);
           }
         }
@@ -257,7 +266,7 @@ canvas.on('mouse:move', function(options) {
   else if (currentActionType == 2) {
     var target = options.target;
 
-    if (target && !canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
+    if (target && !main_canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
       target.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
       target.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
     }
@@ -265,9 +274,9 @@ canvas.on('mouse:move', function(options) {
       target.set('hoverCursor', 'default');
       target.set('moveCursor', 'default');
 
-      canvas.forEachObject((object) => {
-        if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY)) && !canvas.isTargetTransparent(object, options.e.offsetX, options.e.offsetY)) {
-          canvas.bringForward(object);
+      main_canvas.forEachObject((object) => {
+        if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY)) && !main_canvas.isTargetTransparent(object, options.e.offsetX, options.e.offsetY)) {
+          main_canvas.bringForward(object);
           object.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
           object.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
         }
@@ -275,7 +284,7 @@ canvas.on('mouse:move', function(options) {
     }
 
     if (isMobile || options.e.buttons == 1) {
-      if (target && !canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
+      if (target && !main_canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
         var tempObjectsInCurrentGroup = objectsInCurrentGroup.slice();
         tempObjectsInCurrentGroup.map((object) => {
           if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY))) {
@@ -284,7 +293,7 @@ canvas.on('mouse:move', function(options) {
               color: "#08f8e8"
             }));
             object.applyFilters();
-            canvas.renderAll();
+            main_canvas.renderAll();
             tempSelection.addWithUpdate(object);
           }
         });
@@ -293,18 +302,18 @@ canvas.on('mouse:move', function(options) {
   }
 });
 
-canvas.on('mouse:up', function(options) {
+main_canvas.on('mouse:up', function(options) {
   isPanningViewport = false;
   
   if (currentActionType == 0 && isMovingObject) {
     if(!options.e.ctrlKey) {
-      if (canvas.getActiveObject()) {
-        movingObjects = [canvas.getActiveObject()];
+      if (main_canvas.getActiveObject()) {
+        movingObjects = [main_canvas.getActiveObject()];
         crushCounts = [0];
         animate();
       }
     }
-    else if(canvas.getActiveObject()) {
+    else if(main_canvas.getActiveObject()) {
       addCurrentStateToHistory();
     }
     isMovingObject = false;
@@ -330,9 +339,9 @@ canvas.on('mouse:up', function(options) {
       newGroup.setControlVisible('mr', false);
       newGroup.setControlVisible('mb', false);
 
-      tempSelection = new fabric.ActiveSelection([], {canvas: canvas});
-      canvas.discardActiveObject();
-      canvas.requestRenderAll();
+      tempSelection = new fabric.ActiveSelection([], {canvas: main_canvas});
+      main_canvas.discardActiveObject();
+      main_canvas.requestRenderAll();
 
       addCurrentStateToHistory();
 
@@ -343,7 +352,7 @@ canvas.on('mouse:up', function(options) {
   }
   else if (currentActionType == 2) {
     if (objectsInCurrentGroup.length > 0) {
-      var newSelection = new fabric.ActiveSelection([], {canvas: canvas});
+      var newSelection = new fabric.ActiveSelection([], {canvas: main_canvas});
       objectsInCurrentGroup.map((object) => {
         newSelection.addWithUpdate(object);
         logItem.left.objects.push(object);
@@ -386,10 +395,10 @@ canvas.on('mouse:up', function(options) {
       newGroup.setControlVisible('mr', false);
       newGroup.setControlVisible('mb', false);
 
-      tempSelection = new fabric.ActiveSelection([], {canvas: canvas});
+      tempSelection = new fabric.ActiveSelection([], {canvas: main_canvas});
     }
-    canvas.discardActiveObject();
-    canvas.requestRenderAll();
+    main_canvas.discardActiveObject();
+    main_canvas.requestRenderAll();
 
     addCurrentStateToHistory();
 
@@ -401,14 +410,14 @@ canvas.on('mouse:up', function(options) {
   logItem = {};
 });
 
-canvas.on('mouse:wheel', function(options) {
+main_canvas.on('mouse:wheel', function(options) {
   if(options.e.buttons != 1) {
     var delta = options.e.deltaY;
-    var zoom = canvas.getZoom();
+    var zoom = main_canvas.getZoom();
     zoom = zoom * Math.pow(2, delta / 100);
     if (zoom > 8) zoom = 8;
     if (zoom < 0.125) zoom = 0.125;
-    canvas.zoomToPoint({ x: options.e.offsetX, y: options.e.offsetY }, zoom);
+    main_canvas.zoomToPoint({ x: options.e.offsetX, y: options.e.offsetY }, zoom);
     options.e.preventDefault();
     options.e.stopPropagation();
 
@@ -552,7 +561,7 @@ function init() {
   $('.one').addClass('disabled');
   $('.two').addClass('disabled');
 
-  canvas.selection = false;
+  main_canvas.selection = false;
 
   resizeCanvas();
 
@@ -597,11 +606,11 @@ function init() {
       img.setControlVisible('mb', false);
   
       // add image onto canvas (it also re-render the canvas)
-      canvas.add(img);
+      main_canvas.add(img);
       fragments.push(img);
   
       if (fragments.length == total) {
-        canvas.forEachObject((object) => {
+        main_canvas.forEachObject((object) => {
           reposition(object, 0);
         });
         addCurrentStateToHistory();
@@ -614,7 +623,7 @@ function init() {
 function changeActionType(actionType) {
   currentActionType = actionType;
 
-  canvas.forEachObject((object) => {
+  main_canvas.forEachObject((object) => {
     object.set('hoverCursor', 'default');
     object.set('moveCursor', 'default');
   });
@@ -643,38 +652,125 @@ function changeActionType(actionType) {
     $('label[id="actionTypeLabel2"]').removeClass('selected');
     $('label[id="actionTypeLabel3"]').addClass('selected');
   }
-  canvas.discardActiveObject();
-  canvas.requestRenderAll();
+  main_canvas.discardActiveObject();
+  main_canvas.requestRenderAll();
 }
 
 function setSelectable(selectable) {
-  canvas.forEachObject(function(object){
+  main_canvas.forEachObject(function(object){
     object.selectable = selectable;
   });
 }
 
 function resizeCanvas() {
-  $( ".canvas-container" ).css("width", window.innerWidth + 'px');
-  $( ".canvas-container" ).css("height", window.innerHeight + 'px');
+  if (window.location.pathname == '/game_human.html' || splitMode == 'single') {
+    $( ".stage" ).css("display", "block");
 
-  $( ".lower-canvas" ).attr("width", window.innerWidth);
-  $( ".lower-canvas" ).attr("height", window.innerHeight);
-  $( ".lower-canvas" ).css("width", window.innerWidth + 'px');
-  $( ".lower-canvas" ).css("height", window.innerHeight + 'px');
+    $( ".canvas-container:nth-child(1)" ).css("width", window.innerWidth + 'px');
+    $( ".canvas-container:nth-child(1)" ).css("height", window.innerHeight + 'px');
 
-  $( ".upper-canvas" ).attr("width", window.innerWidth);
-  $( ".upper-canvas" ).attr("height", window.innerHeight);
-  $( ".upper-canvas" ).css("width", window.innerWidth + 'px');
-  $( ".upper-canvas" ).css("height", window.innerHeight + 'px');
+    $( ".canvas-container:nth-child(1) .lower-canvas" ).attr("width", window.innerWidth);
+    $( ".canvas-container:nth-child(1) .lower-canvas" ).attr("height", window.innerHeight);
+    $( ".canvas-container:nth-child(1) .lower-canvas" ).css("width", window.innerWidth + 'px');
+    $( ".canvas-container:nth-child(1) .lower-canvas" ).css("height", window.innerHeight + 'px');
 
-  canvas.setWidth(window.innerWidth);
-  canvas.setHeight(window.innerHeight);
+    $( ".canvas-container:nth-child(1) .upper-canvas" ).attr("width", window.innerWidth);
+    $( ".canvas-container:nth-child(1) .upper-canvas" ).attr("height", window.innerHeight);
+    $( ".canvas-container:nth-child(1) .upper-canvas" ).css("width", window.innerWidth + 'px');
+    $( ".canvas-container:nth-child(1) .upper-canvas" ).css("height", window.innerHeight + 'px');
+
+    $( ".canvas-container:nth-child(2)" ).css("display", "none");
+
+    main_canvas.setWidth(window.innerWidth);
+    main_canvas.setHeight(window.innerHeight);
+  }
+  else if (splitMode == 'vertical'){
+    $( ".stage" ).css("display", "flex");
+
+    $( ".spliter" ).css("height", "100vh");
+    $( ".spliter" ).css("width", "4px");
+
+    $( ".canvas-container:nth-child(1)" ).css("width", (window.innerWidth / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(1)" ).css("height", (window.innerHeight) + 'px');
+
+    $( ".canvas-container:nth-child(1) .lower-canvas" ).attr("width", window.innerWidth / 2 - 2);
+    $( ".canvas-container:nth-child(1) .lower-canvas" ).attr("height", window.innerHeight);
+    $( ".canvas-container:nth-child(1) .lower-canvas" ).css("width", (window.innerWidth / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(1) .lower-canvas" ).css("height", (window.innerHeight) + 'px');
+
+    $( ".canvas-container:nth-child(1) .upper-canvas" ).attr("width", window.innerWidth / 2 - 2);
+    $( ".canvas-container:nth-child(1) .upper-canvas" ).attr("height", window.innerHeight);
+    $( ".canvas-container:nth-child(1) .upper-canvas" ).css("width", (window.innerWidth / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(1) .upper-canvas" ).css("height", (window.innerHeight) + 'px');
+
+    $( ".canvas-container:nth-child(3)" ).css("width", (window.innerWidth / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(3)" ).css("height", (window.innerHeight) + 'px');
+
+    $( ".canvas-container:nth-child(3) .lower-canvas" ).attr("width", window.innerWidth / 2 - 2);
+    $( ".canvas-container:nth-child(3) .lower-canvas" ).attr("height", window.innerHeight);
+    $( ".canvas-container:nth-child(3) .lower-canvas" ).css("width", (window.innerWidth / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(3) .lower-canvas" ).css("height", (window.innerHeight) + 'px');
+
+    $( ".canvas-container:nth-child(3) .upper-canvas" ).attr("width", window.innerWidth / 2 - 2);
+    $( ".canvas-container:nth-child(3) .upper-canvas" ).attr("height", window.innerHeight);
+    $( ".canvas-container:nth-child(3) .upper-canvas" ).css("width", (window.innerWidth / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(3) .upper-canvas" ).css("height", (window.innerHeight) + 'px');
+
+    $( ".canvas-container:nth-child(3)" ).css("display", "block");
+
+    main_canvas.setWidth(window.innerWidth / 2 - 2);
+    main_canvas.setHeight(window.innerHeight);
+
+    extra_canvas.setWidth(window.innerWidth / 2 - 2);
+    extra_canvas.setHeight(window.innerHeight);
+  }
+  else if (splitMode == 'horizontal'){
+    $( ".stage" ).css("display", "block");
+
+    $( ".spliter" ).css("height", "4px");
+    $( ".spliter" ).css("width", "100%");
+
+    $( ".canvas-container:nth-child(1)" ).css("width", (window.innerWidth) + 'px');
+    $( ".canvas-container:nth-child(1)" ).css("height", (window.innerHeight / 2 - 2) + 'px');
+
+    $( ".canvas-container:nth-child(1) .lower-canvas" ).attr("width", window.innerWidth);
+    $( ".canvas-container:nth-child(1) .lower-canvas" ).attr("height", window.innerHeight / 2 - 2);
+    $( ".canvas-container:nth-child(1) .lower-canvas" ).css("width", (window.innerWidth) + 'px');
+    $( ".canvas-container:nth-child(1) .lower-canvas" ).css("height", (window.innerHeight / 2 - 2) + 'px');
+
+    $( ".canvas-container:nth-child(1) .upper-canvas" ).attr("width", window.innerWidth);
+    $( ".canvas-container:nth-child(1) .upper-canvas" ).attr("height", window.innerHeight / 2 - 2);
+    $( ".canvas-container:nth-child(1) .upper-canvas" ).css("width", (window.innerWidth) + 'px');
+    $( ".canvas-container:nth-child(1) .upper-canvas" ).css("height", (window.innerHeight / 2 - 2) + 'px');
+
+    $( ".canvas-container:nth-child(3)" ).css("width", (window.innerWidth) + 'px');
+    $( ".canvas-container:nth-child(3)" ).css("height", (window.innerHeight / 2 - 2) + 'px');
+
+    $( ".canvas-container:nth-child(3) .lower-canvas" ).attr("width", window.innerWidth);
+    $( ".canvas-container:nth-child(3) .lower-canvas" ).attr("height", window.innerHeight / 2 - 2);
+    $( ".canvas-container:nth-child(3) .lower-canvas" ).css("width", (window.innerWidth) + 'px');
+    $( ".canvas-container:nth-child(3) .lower-canvas" ).css("height", (window.innerHeight / 2 - 2) + 'px');
+
+    $( ".canvas-container:nth-child(3) .upper-canvas" ).attr("width", window.innerWidth);
+    $( ".canvas-container:nth-child(3) .upper-canvas" ).attr("height", window.innerHeight / 2 - 2);
+    $( ".canvas-container:nth-child(3) .upper-canvas" ).css("width", (window.innerWidth) + 'px');
+    $( ".canvas-container:nth-child(3) .upper-canvas" ).css("height", (window.innerHeight / 2 - 2) + 'px');
+
+    $( ".canvas-container:nth-child(3)" ).css("display", "block");
+
+    main_canvas.setWidth(window.innerWidth);
+    main_canvas.setHeight(window.innerHeight / 2 - 2);
+
+    extra_canvas.setWidth(window.innerWidth);
+    extra_canvas.setHeight(window.innerHeight / 2 - 2);
+  }
+  
 }
 
 function animate() {
   var isFinishedMove = true;
-  canvas.forEachObject((object) => {
-    if (canvas.getActiveObject() != object) {
+  main_canvas.forEachObject((object) => {
+    if (main_canvas.getActiveObject() != object) {
       var vx = object.vx ? object.vx : 0;
       var vy = object.vy ? object.vy : 0;
 
@@ -730,7 +826,7 @@ function animate() {
   });
 
   if(!isFinishedMove) {
-    new fabric.util.requestAnimFrame(animate, canvas.getElement());
+    new fabric.util.requestAnimFrame(animate, main_canvas.getElement());
   }
   else {
     movingObjects = [];
@@ -738,7 +834,7 @@ function animate() {
     addCurrentStateToHistory();
   }
 
-  canvas.renderAll();
+  main_canvas.renderAll();
 }
 
 function reposition(object, count) {
@@ -751,7 +847,7 @@ function reposition(object, count) {
     });
     object.setCoords();
 
-    canvas.forEachObject((otherObject) => {
+    main_canvas.forEachObject((otherObject) => {
       if (object != otherObject) {
         if (object.intersectsWithObject(otherObject)) {
           isOverlayed = true;
@@ -771,7 +867,7 @@ function reposition(object, count) {
 
 function addCurrentStateToHistory() {
   actionHistory = actionHistory.slice(0, actionStep + 1);
-  actionHistory.push(canvas.toJSON(['cornerSize', 'cornerColor', 'cornerStrokeColor', 'transparentCorners']));
+  actionHistory.push(main_canvas.toJSON(['cornerSize', 'cornerColor', 'cornerStrokeColor', 'transparentCorners']));
   actionStep ++;
   if (actionStep > 0) {
     $('.one').removeClass('disabled');
@@ -786,8 +882,8 @@ function undoAction() {
       $('.one').addClass('disabled');
     }
     $('.two').removeClass('disabled');
-    canvas.loadFromJSON(actionHistory[actionStep], () => {
-      canvas.forEachObject((object) => {
+    main_canvas.loadFromJSON(actionHistory[actionStep], () => {
+      main_canvas.forEachObject((object) => {
         object.setControlVisible('tl', false);
         object.setControlVisible('tr', false);
         object.setControlVisible('br', false);
@@ -797,7 +893,7 @@ function undoAction() {
         object.setControlVisible('mr', false);
         object.setControlVisible('mb', false);
       });
-      canvas.renderAll();
+      main_canvas.renderAll();
       changeActionType(0);
     });
   }
@@ -810,8 +906,8 @@ function redoAction() {
       $('.two').addClass('disabled');
     }
     $('.one').removeClass('disabled');
-    canvas.loadFromJSON(actionHistory[actionStep], () => {
-      canvas.forEachObject((object) => {
+    main_canvas.loadFromJSON(actionHistory[actionStep], () => {
+      main_canvas.forEachObject((object) => {
         object.setControlVisible('tl', false);
         object.setControlVisible('tr', false);
         object.setControlVisible('br', false);
@@ -821,17 +917,17 @@ function redoAction() {
         object.setControlVisible('mr', false);
         object.setControlVisible('mb', false);
       });
-      canvas.renderAll();
+      main_canvas.renderAll();
       changeActionType(0);
     });
   }
 }
 
 function zoomIn() {
-  var zoom = canvas.getZoom();
+  var zoom = main_canvas.getZoom();
   zoom = zoom * 2;
   if (zoom > 8) zoom = 8;
-  canvas.zoomToPoint({ x: canvas.getCenter().left, y: canvas.getCenter().top }, zoom);
+  main_canvas.zoomToPoint({ x: main_canvas.getCenter().left, y: main_canvas.getCenter().top }, zoom);
 
   if (zoom == 8) {
     $('.three').addClass('disabled');
@@ -840,10 +936,10 @@ function zoomIn() {
 }
 
 function zoomOut() {
-  var zoom = canvas.getZoom();
+  var zoom = main_canvas.getZoom();
   zoom = zoom / 2;
   if (zoom < 0.125) zoom = 0.125;
-  canvas.zoomToPoint({ x: canvas.getCenter().left, y: canvas.getCenter().top }, zoom);
+  main_canvas.zoomToPoint({ x: main_canvas.getCenter().left, y: main_canvas.getCenter().top }, zoom);
 
   if (zoom == 0.125) {
     $('.four').addClass('disabled');

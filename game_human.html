@@ -21,7 +21,7 @@
         </div>
         <div class="btn-group btn-group-toggle action" data-toggle="buttons">
           <label id="actionTypeLabel1" class="btn btn-secondary selected action-button fa fa-hand-paper-o" style="display: none;" data-toggle="tooltip" data-placement="bottom" title="Move">
-            <input type="radio" name="action_type_options" id="option1"  value=0 checked>
+            <input type="radio" name="action_type_options" id="option1" value=0 checked>
           </label>
           <label id="actionTypeLabel2" class="btn btn-secondary action-button fa fa-link" data-toggle="tooltip" data-placement="bottom" title="Link">
             <input type="radio" name="action_type_options" id="option2" value=1>
@@ -40,7 +40,9 @@
           <div class="btn btn-danger finish-button fa fa-check" id="finish_btn"></div>
         </div>
       </div>
-      <canvas id="stage"></canvas>
+      <div class="stage">
+        <canvas id="main-stage"></canvas>
+      </div>
       <input id="triggerButton" class="triggerButton" type="checkbox" />
       <label for="triggerButton" data-toggle="tooltip" data-placement="top" title="Click for additional actions">
         <div class="trigger-button-icon fa fa-hand-o-right"></div>
