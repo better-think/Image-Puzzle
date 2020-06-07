@@ -204,7 +204,7 @@ main_canvas.on('mouse:move', function(options) {
     }
     else if(options.e.buttons == 1) {
       var mainCanvasIndex = 1;
-      if (window.location.pathname == '/game_ai_human.html') {
+      if (window.location.pathname == '/game_ai_human.html' || window.location.pathname == '/game_ai_human') {
         mainCanvasIndex = 3;
       }
       if ($( `.canvas-container:nth-child(${mainCanvasIndex}) .upper-canvas` )[0] == options.e.target) {
@@ -622,21 +622,21 @@ $( ".spliter" ).mousedown(function(e) {
 $( ".stage" ).mousemove(function(e) {
   if(isDragingSpliter) {
     if (splitMode == 'vertical') {
-      if (window.location.pathname == "/game_human_ai.html") {
+      if (window.location.pathname == "/game_human_ai.html" || window.location.pathname == "/game_human_ai") {
         mainCanvasRatio = (e.clientX - initialMouseXInSpliter) / (window.innerWidth - spliterWidth);
         extraCanvasRatio = 1 - mainCanvasRatio;
       }
-      else if (window.location.pathname == "/game_ai_human.html") {
+      else if (window.location.pathname == "/game_ai_human.html" || window.location.pathname == "/game_ai_human") {
         extraCanvasRatio = (e.clientX - initialMouseXInSpliter) / (window.innerWidth - spliterWidth);
         mainCanvasRatio = 1 - extraCanvasRatio;
       }
     }
     else if (splitMode == 'horizontal') {
-      if (window.location.pathname == "/game_human_ai.html") {
+      if (window.location.pathname == "/game_human_ai.html" || window.location.pathname == "/game_human_ai") {
         mainCanvasRatio = (e.clientY - initialMouseYInSpliter) / (window.innerHeight - spliterWidth);
         extraCanvasRatio = 1 - mainCanvasRatio;
       }
-      else if (window.location.pathname == "/game_ai_human.html") {
+      else if (window.location.pathname == "/game_ai_human.html" || window.location.pathname == "/game_ai_human") {
         extraCanvasRatio = (e.clientY - initialMouseYInSpliter) / (window.innerHeight - spliterWidth);
         mainCanvasRatio = 1 - extraCanvasRatio;
       }
@@ -774,7 +774,7 @@ function setSelectable(selectable) {
 }
 
 function resizeCanvas() {
-  if (window.location.pathname == '/game_human.html' || splitMode == 'single') {
+  if (window.location.pathname == '/game_human.html' || window.location.pathname == '/game_human' || splitMode == 'single') {
     $( ".stage" ).css("display", "block");
 
     $( ".spliter" ).css("display", "none");
@@ -801,7 +801,7 @@ function resizeCanvas() {
     var firstCanvasRatio = mainCanvasRatio;
     var secondCanvasRatio = extraCanvasRatio;
 
-    if (window.location.pathname == '/game_ai_human.html') {
+    if (window.location.pathname == '/game_ai_human.html' || window.location.pathname == '/game_ai_human') {
       firstCanvasRatio = extraCanvasRatio;
       secondCanvasRatio = mainCanvasRatio;
     }
@@ -850,7 +850,7 @@ function resizeCanvas() {
     var firstCanvasRatio = mainCanvasRatio;
     var secondCanvasRatio = extraCanvasRatio;
 
-    if (window.location.pathname == '/game_ai_human.html') {
+    if (window.location.pathname == '/game_ai_human.html' || window.location.pathname == '/game_ai_human') {
       firstCanvasRatio = extraCanvasRatio;
       secondCanvasRatio = mainCanvasRatio;
     }
