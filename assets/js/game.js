@@ -641,6 +641,7 @@ $( ".stage" ).mousemove(function(e) {
         mainCanvasRatio = 1 - extraCanvasRatio;
       }
     }
+    console.log(mainCanvasRatio);
     resizeCanvas();
   }
 });
