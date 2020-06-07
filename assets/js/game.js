@@ -4,13 +4,13 @@ if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine
     isMobile = true;
 }
 
-var splitMode = 'vertical';
-var spliterWidth = 4;
-var mainCanvasRatio = 0.5;
-var extraCanvasRatio = 0.5;
-var isDragingSpliter = false;
-var initialMouseXInSpliter = 0;
-var initialMouseYInSpliter = 0;
+var splitMode = 'vertical'; // screen split mode
+var spliterWidth = 4; // width of spliter
+var mainCanvasRatio = 0.5; // ratio of main canvas in whole screen
+var extraCanvasRatio = 0.5; // ratio of extra canvas in whole screen
+var isDragingSpliter = false; // is dragging spliter currently
+var initialMouseXInSpliter = 0; // offset X of mouse pointer in Spliter
+var initialMouseYInSpliter = 0; // offset Y of mouse pointer in Spliter
 
 var main_canvas = new fabric.Canvas('main-stage');
 var extra_canvas = new fabric.Canvas('extra-stage');
@@ -86,7 +86,18 @@ window.addEventListener('keydown', handleKeyDown);
 
 main_canvas.on('object:moved', function(options) {
   logItem.action = 'move';
-  logItem.object = options.target;
+  logItem.object = {}
+  logItem.object.objects = [];
+  if (options.target.type == 'group') {
+    logItem.object.type = 'group';
+    options.target.forEachObject((object) => {
+      logItem.object.objects.push(object.custom_id);
+    });
+  }
+  else {
+    logItem.object.type = 'fragment';
+    logItem.object.objects.push(options.target.custom_id);
+  }
   logItem.original = {};
   logItem.original.centerX = options.target.getCenterPoint().x - (options.target.left - options.transform.original.left);
   logItem.original.centerY = options.target.getCenterPoint().y - (options.target.top - options.transform.original.top);
@@ -98,7 +109,18 @@ main_canvas.on('object:moved', function(options) {
 
 main_canvas.on('object:rotated', function(options) {
   logItem.action = 'rotate';
-  logItem.object = options.target;
+  logItem.object = {}
+  logItem.object.objects = [];
+  if (options.target.type == 'group') {
+    logItem.object.type = 'group';
+    options.target.forEachObject((object) => {
+      logItem.object.objects.push(object.custom_id);
+    });
+  }
+  else {
+    logItem.object.type = 'fragment';
+    logItem.object.objects.push(options.target.custom_id);
+  }
   logItem.original = {};
   logItem.original.angle = options.transform.original.angle;
   logItem.transformed = {};
@@ -142,7 +164,11 @@ main_canvas.on('mouse:down', function(options) {
       target.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
       if (target.type == 'group') {
         logItem.action = 'unlink';
-        logItem.original = {type: 'group', objects: target.getObjects()};
+        var objects = [];
+        target.forEachObject((object) => {
+          objects.push(object.custom_id);
+        });
+        logItem.original = {type: 'group', objects: objects};
         logItem.left = {type: 'group', objects: []};
         logItem.separated = {type: 'group', objects: []}
 
@@ -239,7 +265,11 @@ main_canvas.on('mouse:move', function(options) {
     if (isMobile || options.e.buttons == 1) {
       if (target && !main_canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
         if (target.type == 'group') {
-          logItem.objects.push({type: 'group', objects: target.getObjects()});
+          var objects = [];
+          target.forEachObject((object) => {
+            objects.push(object.custom_id);
+          });
+          logItem.objects.push({type: 'group', objects: objects});
           var subObjects = target.getObjects();
           target.toActiveSelection();
           main_canvas.discardActiveObject();
@@ -257,7 +287,7 @@ main_canvas.on('mouse:move', function(options) {
         }
         else {
           if (!tempSelection.contains(target)) {
-            logItem.objects.push({type: 'fragment', objects: target});
+            logItem.objects.push({type: 'fragment', objects: [target.custom_id]});
             target.filters.push(new fabric.Image.filters.BlendColor({
               color: "#08f8e8"
             }));
@@ -361,7 +391,7 @@ main_canvas.on('mouse:up', function(options) {
       var newSelection = new fabric.ActiveSelection([], {canvas: main_canvas});
       objectsInCurrentGroup.map((object) => {
         newSelection.addWithUpdate(object);
-        logItem.left.objects.push(object);
+        logItem.left.objects.push(object.custom_id);
       });
 
       var newGroup = newSelection.toGroup();
@@ -384,7 +414,7 @@ main_canvas.on('mouse:up', function(options) {
       tempSelection.forEachObject(function(object) {
         object.filters.pop();
         object.applyFilters();
-        logItem.separated.objects.push(object);
+        logItem.separated.objects.push(object.custom_id);
       });
 
       var newGroup = tempSelection.toGroup();
@@ -641,6 +671,8 @@ function init() {
 
   resizeCanvas();
 
+  var fragmentCount = 1;
+
   for (var i = 1; i <= total; i ++) {
     var fileNumber = `000${i}`;
     var imageFileName = `fragment_${fileNumber.substring(fileNumber.length - 4)}.png`;
@@ -669,7 +701,7 @@ function init() {
         moveCursor: 'default',
         cornerStrokeColor: 'blue',
         visible: false,
-        custom_id: i
+        custom_id: fragmentCount
       });
   
       img.setControlVisible('tl', false);
@@ -685,12 +717,14 @@ function init() {
       main_canvas.add(img);
       fragments.push(img);
   
-      if (fragments.length == total) {
+      if (fragmentCount == total) {
         main_canvas.forEachObject((object) => {
           reposition(object, 0);
         });
         addCurrentStateToHistory();
       }
+
+      fragmentCount ++;
   
     }, {crossOrigin: 'anonymous'});
   }

@@ -2,6 +2,10 @@ body {
   --l: 3.5em;
 }
 
+.main-container {
+  overflow: hidden;
+}
+
 #intro_modal .modal-dialog, #finish_modal .modal-dialog {
   max-width: calc(100% - 20px);
   margin: 10px;
