@@ -5,6 +5,12 @@ if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine
 }
 
 var splitMode = 'vertical';
+var spliterWidth = 4;
+var mainCanvasRatio = 0.5;
+var extraCanvasRatio = 0.5;
+var isDragingSpliter = false;
+var initialMouseXInSpliter = 0;
+var initialMouseYInSpliter = 0;
 
 var main_canvas = new fabric.Canvas('main-stage');
 var extra_canvas = new fabric.Canvas('extra-stage');
@@ -445,6 +451,15 @@ $("input[name='action_type_options']").click(function() {
 
 $("input[name='split_options']").click(function() {
   splitMode = $("input[name='split_options']:checked").val();
+  if (splitMode == 'vertical') {
+    $( ".spliter" ).css("cursor", "e-resize");
+  }
+  else if (splitMode == 'horizontal') {
+    $( ".spliter" ).css("cursor", "n-resize");
+  }
+  else {
+    $( ".spliter" ).css("cursor", "default");
+  }
   resizeCanvas();
 });
 
@@ -562,11 +577,67 @@ $('#robot').click(function() {
 	$('.tip-list-wrapper ul').html(str);
 });
 
+$( ".spliter" ).mousedown(function(e) {
+  isDragingSpliter = true;
+  initialMouseXInSpliter = e.offsetX;
+  initialMouseYInSpliter = e.offsetY;
+  main_canvas.selectable = false;
+  if (splitMode == 'vertical') {
+    $( ".stage" ).css("cursor", "e-resize");
+  }
+  else if (splitMode == 'horizontal'){
+    $( ".stage" ).css("cursor", "n-resize");
+  }
+});
+$( ".stage" ).mousemove(function(e) {
+  if(isDragingSpliter) {
+    if (splitMode == 'vertical') {
+      if (window.location.pathname == "/game_human_ai.html") {
+        mainCanvasRatio = (e.clientX - initialMouseXInSpliter) / (window.innerWidth - spliterWidth);
+        extraCanvasRatio = 1 - mainCanvasRatio;
+      }
+      else if (window.location.pathname == "/game_ai_human.html") {
+        extraCanvasRatio = (e.clientX - initialMouseXInSpliter) / (window.innerWidth - spliterWidth);
+        mainCanvasRatio = 1 - extraCanvasRatio;
+      }
+    }
+    else if (splitMode == 'horizontal') {
+      if (window.location.pathname == "/game_human_ai.html") {
+        mainCanvasRatio = (e.clientY - initialMouseYInSpliter) / (window.innerHeight - spliterWidth);
+        extraCanvasRatio = 1 - mainCanvasRatio;
+      }
+      else if (window.location.pathname == "/game_ai_human.html") {
+        extraCanvasRatio = (e.clientY - initialMouseYInSpliter) / (window.innerHeight - spliterWidth);
+        mainCanvasRatio = 1 - extraCanvasRatio;
+      }
+    }
+    resizeCanvas();
+  }
+});
+$( ".spliter" ).mouseup(function(e) {
+  if(isDragingSpliter) {
+    isDragingSpliter = false;
+    main_canvas.selectable = true;
+    $( ".stage" ).css("cursor", "default");
+  }
+});
+$( ".stage" ).mouseup(function(e) {
+  if(isDragingSpliter) {
+    isDragingSpliter = false;
+    main_canvas.selectable = true;
+    $( ".stage" ).css("cursor", "default");
+  }
+});
+
 function init() {
   $('.one').addClass('disabled');
   $('.two').addClass('disabled');
 
+  $( ".spliter" ).css("cursor", "e-resize");
+
   main_canvas.selection = false;
+  extra_canvas.selection = false;
+  extra_canvas.selectable = false;
 
   resizeCanvas();
 
@@ -692,47 +763,63 @@ function resizeCanvas() {
     main_canvas.setHeight(window.innerHeight);
   }
   else if (splitMode == 'vertical'){
+    var firstCanvasRatio = mainCanvasRatio;
+    var secondCanvasRatio = extraCanvasRatio;
+
+    if (window.location.pathname == '/game_ai_human.html') {
+      firstCanvasRatio = extraCanvasRatio;
+      secondCanvasRatio = mainCanvasRatio;
+    }
+
     $( ".stage" ).css("display", "flex");
 
     $( ".spliter" ).css("display", "block");
     $( ".spliter" ).css("height", "100vh");
     $( ".spliter" ).css("width", "4px");
 
-    $( ".canvas-container:nth-child(1)" ).css("width", (window.innerWidth / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(1)" ).css("width", ((window.innerWidth - spliterWidth) * firstCanvasRatio) + 'px');
     $( ".canvas-container:nth-child(1)" ).css("height", (window.innerHeight) + 'px');
 
-    $( ".canvas-container:nth-child(1) .lower-canvas" ).attr("width", window.innerWidth / 2 - 2);
+    $( ".canvas-container:nth-child(1) .lower-canvas" ).attr("width", (window.innerWidth - spliterWidth) * firstCanvasRatio);
     $( ".canvas-container:nth-child(1) .lower-canvas" ).attr("height", window.innerHeight);
-    $( ".canvas-container:nth-child(1) .lower-canvas" ).css("width", (window.innerWidth / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(1) .lower-canvas" ).css("width", ((window.innerWidth - spliterWidth) * firstCanvasRatio) + 'px');
     $( ".canvas-container:nth-child(1) .lower-canvas" ).css("height", (window.innerHeight) + 'px');
 
-    $( ".canvas-container:nth-child(1) .upper-canvas" ).attr("width", window.innerWidth / 2 - 2);
+    $( ".canvas-container:nth-child(1) .upper-canvas" ).attr("width", (window.innerWidth - spliterWidth) * firstCanvasRatio);
     $( ".canvas-container:nth-child(1) .upper-canvas" ).attr("height", window.innerHeight);
-    $( ".canvas-container:nth-child(1) .upper-canvas" ).css("width", (window.innerWidth / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(1) .upper-canvas" ).css("width", ((window.innerWidth - spliterWidth) * firstCanvasRatio) + 'px');
     $( ".canvas-container:nth-child(1) .upper-canvas" ).css("height", (window.innerHeight) + 'px');
 
-    $( ".canvas-container:nth-child(3)" ).css("width", (window.innerWidth / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(3)" ).css("width", ((window.innerWidth - spliterWidth) * secondCanvasRatio) + 'px');
     $( ".canvas-container:nth-child(3)" ).css("height", (window.innerHeight) + 'px');
 
-    $( ".canvas-container:nth-child(3) .lower-canvas" ).attr("width", window.innerWidth / 2 - 2);
+    $( ".canvas-container:nth-child(3) .lower-canvas" ).attr("width", (window.innerWidth - spliterWidth) * secondCanvasRatio);
     $( ".canvas-container:nth-child(3) .lower-canvas" ).attr("height", window.innerHeight);
-    $( ".canvas-container:nth-child(3) .lower-canvas" ).css("width", (window.innerWidth / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(3) .lower-canvas" ).css("width", ((window.innerWidth - spliterWidth) * secondCanvasRatio) + 'px');
     $( ".canvas-container:nth-child(3) .lower-canvas" ).css("height", (window.innerHeight) + 'px');
 
-    $( ".canvas-container:nth-child(3) .upper-canvas" ).attr("width", window.innerWidth / 2 - 2);
+    $( ".canvas-container:nth-child(3) .upper-canvas" ).attr("width", (window.innerWidth - spliterWidth) * secondCanvasRatio);
     $( ".canvas-container:nth-child(3) .upper-canvas" ).attr("height", window.innerHeight);
-    $( ".canvas-container:nth-child(3) .upper-canvas" ).css("width", (window.innerWidth / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(3) .upper-canvas" ).css("width", ((window.innerWidth - spliterWidth) * secondCanvasRatio) + 'px');
     $( ".canvas-container:nth-child(3) .upper-canvas" ).css("height", (window.innerHeight) + 'px');
 
     $( ".canvas-container:nth-child(3)" ).css("display", "block");
 
-    main_canvas.setWidth(window.innerWidth / 2 - 2);
+    main_canvas.setWidth((window.innerWidth - spliterWidth) * mainCanvasRatio);
     main_canvas.setHeight(window.innerHeight);
 
-    extra_canvas.setWidth(window.innerWidth / 2 - 2);
+    extra_canvas.setWidth((window.innerWidth - spliterWidth) * extraCanvasRatio);
     extra_canvas.setHeight(window.innerHeight);
   }
   else if (splitMode == 'horizontal'){
+    var firstCanvasRatio = mainCanvasRatio;
+    var secondCanvasRatio = extraCanvasRatio;
+
+    if (window.location.pathname == '/game_ai_human.html') {
+      firstCanvasRatio = extraCanvasRatio;
+      secondCanvasRatio = mainCanvasRatio;
+    }
+
     $( ".stage" ).css("display", "block");
 
     $( ".spliter" ).css("display", "block");
@@ -740,38 +827,38 @@ function resizeCanvas() {
     $( ".spliter" ).css("width", "100%");
 
     $( ".canvas-container:nth-child(1)" ).css("width", (window.innerWidth) + 'px');
-    $( ".canvas-container:nth-child(1)" ).css("height", (window.innerHeight / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(1)" ).css("height", ((window.innerHeight - spliterWidth) * firstCanvasRatio) + 'px');
 
     $( ".canvas-container:nth-child(1) .lower-canvas" ).attr("width", window.innerWidth);
-    $( ".canvas-container:nth-child(1) .lower-canvas" ).attr("height", window.innerHeight / 2 - 2);
+    $( ".canvas-container:nth-child(1) .lower-canvas" ).attr("height", (window.innerHeight - spliterWidth) * firstCanvasRatio);
     $( ".canvas-container:nth-child(1) .lower-canvas" ).css("width", (window.innerWidth) + 'px');
-    $( ".canvas-container:nth-child(1) .lower-canvas" ).css("height", (window.innerHeight / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(1) .lower-canvas" ).css("height", ((window.innerHeight - spliterWidth) * firstCanvasRatio) + 'px');
 
     $( ".canvas-container:nth-child(1) .upper-canvas" ).attr("width", window.innerWidth);
-    $( ".canvas-container:nth-child(1) .upper-canvas" ).attr("height", window.innerHeight / 2 - 2);
+    $( ".canvas-container:nth-child(1) .upper-canvas" ).attr("height", (window.innerHeight - spliterWidth) * firstCanvasRatio);
     $( ".canvas-container:nth-child(1) .upper-canvas" ).css("width", (window.innerWidth) + 'px');
-    $( ".canvas-container:nth-child(1) .upper-canvas" ).css("height", (window.innerHeight / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(1) .upper-canvas" ).css("height", ((window.innerHeight - spliterWidth) * firstCanvasRatio) + 'px');
 
     $( ".canvas-container:nth-child(3)" ).css("width", (window.innerWidth) + 'px');
-    $( ".canvas-container:nth-child(3)" ).css("height", (window.innerHeight / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(3)" ).css("height", ((window.innerHeight - spliterWidth) * secondCanvasRatio) + 'px');
 
     $( ".canvas-container:nth-child(3) .lower-canvas" ).attr("width", window.innerWidth);
-    $( ".canvas-container:nth-child(3) .lower-canvas" ).attr("height", window.innerHeight / 2 - 2);
+    $( ".canvas-container:nth-child(3) .lower-canvas" ).attr("height", (window.innerHeight - spliterWidth) * secondCanvasRatio);
     $( ".canvas-container:nth-child(3) .lower-canvas" ).css("width", (window.innerWidth) + 'px');
-    $( ".canvas-container:nth-child(3) .lower-canvas" ).css("height", (window.innerHeight / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(3) .lower-canvas" ).css("height", ((window.innerHeight - spliterWidth) * secondCanvasRatio) + 'px');
 
     $( ".canvas-container:nth-child(3) .upper-canvas" ).attr("width", window.innerWidth);
-    $( ".canvas-container:nth-child(3) .upper-canvas" ).attr("height", window.innerHeight / 2 - 2);
+    $( ".canvas-container:nth-child(3) .upper-canvas" ).attr("height", (window.innerHeight - spliterWidth) * secondCanvasRatio);
     $( ".canvas-container:nth-child(3) .upper-canvas" ).css("width", (window.innerWidth) + 'px');
-    $( ".canvas-container:nth-child(3) .upper-canvas" ).css("height", (window.innerHeight / 2 - 2) + 'px');
+    $( ".canvas-container:nth-child(3) .upper-canvas" ).css("height", ((window.innerHeight - spliterWidth) * secondCanvasRatio) + 'px');
 
     $( ".canvas-container:nth-child(3)" ).css("display", "block");
 
     main_canvas.setWidth(window.innerWidth);
-    main_canvas.setHeight(window.innerHeight / 2 - 2);
+    main_canvas.setHeight((window.innerHeight - spliterWidth) * mainCanvasRatio);
 
     extra_canvas.setWidth(window.innerWidth);
-    extra_canvas.setHeight(window.innerHeight / 2 - 2);
+    extra_canvas.setHeight((window.innerHeight - spliterWidth) * extraCanvasRatio);
   }
   
 }
