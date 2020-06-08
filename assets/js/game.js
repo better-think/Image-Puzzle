@@ -470,6 +470,30 @@ main_canvas.on('mouse:wheel', function(options) {
   }
 });
 
+extra_canvas.on('mouse:wheel', function(options) {
+  if(options.e.buttons != 1) {
+    var delta = options.e.deltaY;
+    var zoom = extra_canvas.getZoom();
+    zoom = zoom * Math.pow(2, delta / 100);
+    if (zoom > 8) zoom = 8;
+    if (zoom < 0.125) zoom = 0.125;
+    extra_canvas.zoomToPoint({ x: options.e.offsetX, y: options.e.offsetY }, zoom);
+    options.e.preventDefault();
+    options.e.stopPropagation();
+
+    if (zoom == 8) {
+      $('.three').addClass('disabled');
+    }
+    else if (zoom == 0.125) {
+      $('.four').addClass('disabled');
+    }
+    else {
+      $('.three').removeClass('disabled');
+      $('.four').removeClass('disabled');
+    }
+  }
+});
+
 $("input[name='action_type_options']").click(function() {
   if ($("input[name='action_type_options']:checked").val() == currentActionType) {
     changeActionType(0);
@@ -781,7 +805,6 @@ function init() {
         }
   
         extraFragmentCount ++;
-        console.log(extraFragmentCount)
     
       }, {crossOrigin: 'anonymous'});
     }
@@ -883,7 +906,7 @@ function resizeCanvas() {
       extra_canvas.setHeight(window.innerHeight);
     }
   }
-  if (
+  else if (
     ((window.location.pathname == '/game_human_ai.html' || window.location.pathname == '/game_human_ai') && splitMode == 'robot') ||
     ((window.location.pathname == '/game_ai_human.html' || window.location.pathname == '/game_ai_human') && splitMode == 'user')
   ) {
