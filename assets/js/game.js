@@ -129,26 +129,53 @@ main_canvas.on('object:rotated', function(options) {
 });
 
 main_canvas.on('mouse:down:before', function(options) {
-  if (options.target && main_canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
+  var x, y;
+  if (isMobile) {
+    x = options.e.targetTouches[0].clientX;
+    y = options.e.targetTouches[0].clientY;
+  }
+  else {
+    x = options.e.offsetX;
+    y = options.e.offsetY;
+  }
+
+  if (options.target && main_canvas.isTargetTransparent(options.target, x, y)) {
     main_canvas.discardActiveObject();
     options.target.selectable = false;
+
+    if (isMobile) {
+      main_canvas.forEachObject((object) => {
+        if (object.containsPoint(new fabric.Point(x, y)) && !main_canvas.isTargetTransparent(object, x, y)) {
+          object.selectable = true;
+          main_canvas.bringToFront(object);
+          main_canvas.setActiveObject(object);
+        }
+      });
+    }
+
     main_canvas.renderAll();
+  }
+  else if (options.target && currentActionType == 0) {
+    options.target.selectable = true;
   }
 });
 
 main_canvas.on('mouse:down', function(options) {
-  if (!options.target || main_canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
-    if (isMobile) {
+  var x, y;
+  if (isMobile) {
+    x = options.e.targetTouches[0].clientX;
+    y = options.e.targetTouches[0].clientY;
+  }
+  else {
+    x = options.e.offsetX;
+    y = options.e.offsetY;
+  }
+
+  if (!options.target || main_canvas.isTargetTransparent(options.target, x, y)) {
+    if (isMobile || options.e.buttons == 1) {
       isPanningViewport = true;
-      initialMouseX = options.e.targetTouches[0].screenX;
-      initialMouseY = options.e.targetTouches[0].screenY;
-      initialViewPortTLX = main_canvas.vptCoords.tl.x;
-      initialViewPortTLY = main_canvas.vptCoords.tl.y;
-    }
-    else if (options.e.buttons == 1) {
-      isPanningViewport = true;
-      initialMouseX = options.e.offsetX;
-      initialMouseY = options.e.offsetY;
+      initialMouseX = x;
+      initialMouseY = y;
       initialViewPortTLX = main_canvas.vptCoords.tl.x;
       initialViewPortTLY = main_canvas.vptCoords.tl.y;
     }
@@ -177,7 +204,7 @@ main_canvas.on('mouse:down', function(options) {
         main_canvas.discardActiveObject();
         var tempObjectsInCurrentGroup = objectsInCurrentGroup.slice();
         tempObjectsInCurrentGroup.map((object) => {
-          if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY))) {
+          if (object.containsPoint(new fabric.Point(x, y))) {
             objectsInCurrentGroup.splice(objectsInCurrentGroup.indexOf(object), 1);
             object.filters.push(new fabric.Image.filters.BlendColor({
               color: "#08f8e8"
@@ -193,11 +220,21 @@ main_canvas.on('mouse:down', function(options) {
 });
 
 main_canvas.on('mouse:move', function(options) {
+  var x, y;
+  if (isMobile) {
+    x = options.e.targetTouches[0].clientX;
+    y = options.e.targetTouches[0].clientY;
+  }
+  else {
+    x = options.e.offsetX;
+    y = options.e.offsetY;
+  }
+
   if (isPanningViewport) {
     if (isMobile) {
       var newVptTlPoint = new fabric.Point(
-        initialViewPortTLX - (options.e.changedTouches[0].screenX - initialMouseX),
-        initialViewPortTLY - (options.e.changedTouches[0].screenY - initialMouseY)
+        initialViewPortTLX - (x - initialMouseX),
+        initialViewPortTLY - (y - initialMouseY)
       )
       main_canvas.absolutePan(newVptTlPoint);
       main_canvas.renderAll();
@@ -209,8 +246,8 @@ main_canvas.on('mouse:move', function(options) {
       }
       if ($( `.canvas-container:nth-child(${mainCanvasIndex}) .upper-canvas` )[0] == options.e.target) {
         var newVptTlPoint = new fabric.Point(
-          initialViewPortTLX * main_canvas.getZoom() - (options.e.offsetX - initialMouseX),
-          initialViewPortTLY * main_canvas.getZoom() - (options.e.offsetY - initialMouseY)
+          initialViewPortTLX * main_canvas.getZoom() - (x - initialMouseX),
+          initialViewPortTLY * main_canvas.getZoom() - (y - initialMouseY)
         )
         main_canvas.absolutePan(newVptTlPoint);
         main_canvas.renderAll();
@@ -224,7 +261,7 @@ main_canvas.on('mouse:move', function(options) {
       isMovingObject = true;
     }
     else {
-      if (target && !main_canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
+      if (target && !main_canvas.isTargetTransparent(options.target, x, y)) {
         target.set('hoverCursor', 'move');
         target.set('moveCursor', 'move');
         target.selectable = true;
@@ -235,8 +272,8 @@ main_canvas.on('mouse:move', function(options) {
         target.selectable = false;
 
         main_canvas.forEachObject((object) => {
-          if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY)) && !main_canvas.isTargetTransparent(object, options.e.offsetX, options.e.offsetY)) {
-            main_canvas.bringForward(object);
+          if (object.containsPoint(new fabric.Point(x, y)) && !main_canvas.isTargetTransparent(object, x, y)) {
+            main_canvas.bringToFront(object);
           }
         });
       }
@@ -245,7 +282,7 @@ main_canvas.on('mouse:move', function(options) {
   else if (currentActionType == 1) {
     var target = options.target;
 
-    if ((target && !main_canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY))) {
+    if ((target && !main_canvas.isTargetTransparent(options.target, x, y))) {
       target.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
       target.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
     }
@@ -254,8 +291,8 @@ main_canvas.on('mouse:move', function(options) {
       target.set('moveCursor', 'default');
 
       main_canvas.forEachObject((object) => {
-        if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY)) && !main_canvas.isTargetTransparent(object, options.e.offsetX, options.e.offsetY)) {
-          main_canvas.bringForward(object);
+        if (object.containsPoint(new fabric.Point(x, y)) && !main_canvas.isTargetTransparent(object, x, y)) {
+          main_canvas.bringToFront(object);
           object.set('hoverCursor', "url(assets/img/cursor/link.svg), auto");
           object.set('moveCursor', "url(assets/img/cursor/link.svg), auto");
         }
@@ -263,7 +300,7 @@ main_canvas.on('mouse:move', function(options) {
     }
 
     if (isMobile || options.e.buttons == 1) {
-      if (target && !main_canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
+      if (target && !main_canvas.isTargetTransparent(options.target, x, y)) {
         if (target.type == 'group') {
           var objects = [];
           target.forEachObject((object) => {
@@ -302,7 +339,7 @@ main_canvas.on('mouse:move', function(options) {
   else if (currentActionType == 2) {
     var target = options.target;
 
-    if (target && !main_canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
+    if (target && !main_canvas.isTargetTransparent(options.target, x, y)) {
       target.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
       target.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
     }
@@ -311,8 +348,8 @@ main_canvas.on('mouse:move', function(options) {
       target.set('moveCursor', 'default');
 
       main_canvas.forEachObject((object) => {
-        if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY)) && !main_canvas.isTargetTransparent(object, options.e.offsetX, options.e.offsetY)) {
-          main_canvas.bringForward(object);
+        if (object.containsPoint(new fabric.Point(x, y)) && !main_canvas.isTargetTransparent(object, x, y)) {
+          main_canvas.bringToFront(object);
           object.set('hoverCursor', "url(assets/img/cursor/unlink.svg), auto");
           object.set('moveCursor', "url(assets/img/cursor/unlink.svg), auto");
         }
@@ -320,10 +357,10 @@ main_canvas.on('mouse:move', function(options) {
     }
 
     if (isMobile || options.e.buttons == 1) {
-      if (target && !main_canvas.isTargetTransparent(options.target, options.e.offsetX, options.e.offsetY)) {
+      if (target && !main_canvas.isTargetTransparent(options.target, x, y)) {
         var tempObjectsInCurrentGroup = objectsInCurrentGroup.slice();
         tempObjectsInCurrentGroup.map((object) => {
-          if (object.containsPoint(new fabric.Point(options.e.offsetX, options.e.offsetY))) {
+          if (object.containsPoint(new fabric.Point(x, y))) {
             objectsInCurrentGroup.splice(objectsInCurrentGroup.indexOf(object), 1);
             object.filters.push(new fabric.Image.filters.BlendColor({
               color: "#08f8e8"
@@ -365,7 +402,7 @@ main_canvas.on('mouse:up', function(options) {
       newGroup.cornerColor = 'red';
       newGroup.cornerStrokeColor = 'blue';
       newGroup.transparentCorners = false;
-      newGroup.selectable = false;
+      // newGroup.selectable = false;
       newGroup.setControlVisible('tl', false);
       newGroup.setControlVisible('tr', false);
       newGroup.setControlVisible('br', false);
@@ -377,7 +414,7 @@ main_canvas.on('mouse:up', function(options) {
 
       tempSelection = new fabric.ActiveSelection([], {canvas: main_canvas});
       main_canvas.discardActiveObject();
-      main_canvas.requestRenderAll();
+      main_canvas.renderAll();
 
       addCurrentStateToHistory();
 
@@ -395,7 +432,7 @@ main_canvas.on('mouse:up', function(options) {
       });
 
       var newGroup = newSelection.toGroup();
-      newGroup.selectable = false;
+      // newGroup.selectable = false;
       newGroup.cornerColor = 'red';
       newGroup.cornerStrokeColor = 'blue';
       newGroup.transparentCorners = false;
@@ -418,7 +455,7 @@ main_canvas.on('mouse:up', function(options) {
       });
 
       var newGroup = tempSelection.toGroup();
-      newGroup.selectable = false;
+      // newGroup.selectable = false;
       newGroup.cornerColor = 'red';
       newGroup.cornerStrokeColor = 'blue';
       newGroup.transparentCorners = false;
@@ -434,7 +471,7 @@ main_canvas.on('mouse:up', function(options) {
       tempSelection = new fabric.ActiveSelection([], {canvas: main_canvas});
     }
     main_canvas.discardActiveObject();
-    main_canvas.requestRenderAll();
+    main_canvas.renderAll();
 
     addCurrentStateToHistory();
 
