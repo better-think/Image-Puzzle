@@ -641,7 +641,6 @@ $( ".stage" ).mousemove(function(e) {
         mainCanvasRatio = 1 - extraCanvasRatio;
       }
     }
-    console.log(mainCanvasRatio);
     resizeCanvas();
   }
 });
@@ -668,11 +667,11 @@ function init() {
 
   main_canvas.selection = false;
   extra_canvas.selection = false;
-  extra_canvas.selectable = false;
 
   resizeCanvas();
 
-  var fragmentCount = 1;
+  var mainFragmentCount = 1;
+  var extraFragmentCount = 1;
 
   for (var i = 1; i <= total; i ++) {
     var fileNumber = `000${i}`;
@@ -702,7 +701,7 @@ function init() {
         moveCursor: 'default',
         cornerStrokeColor: 'blue',
         visible: false,
-        custom_id: fragmentCount
+        custom_id: mainFragmentCount
       });
   
       img.setControlVisible('tl', false);
@@ -718,16 +717,87 @@ function init() {
       main_canvas.add(img);
       fragments.push(img);
   
-      if (fragmentCount == total) {
+      if (mainFragmentCount == total) {
         main_canvas.forEachObject((object) => {
-          reposition(object, 0);
+          reposition('main', object, 0);
         });
         addCurrentStateToHistory();
       }
 
-      fragmentCount ++;
+      mainFragmentCount ++;
   
     }, {crossOrigin: 'anonymous'});
+
+    if (
+      window.location.pathname == "/game_human_ai.html" ||
+      window.location.pathname == "/game_human_ai" ||
+      window.location.pathname == "/game_ai_human.html" ||
+      window.location.pathname == "/game_ai_human"
+    ) {
+      new fabric.Image.fromURL(`./assets/img/fragments/${imageFileName}`, function(oImg) {
+  
+        var img = oImg.scale(0.2);
+    
+        // add filter
+        img.filters.push(new fabric.Image.filters.RemoveColor({
+          color: "#08f8e8"
+        }));
+    
+        // apply filters and re-render canvas when done
+        img.applyFilters();
+    
+        img.set({
+          cornerColor: 'red',
+          cornerSize: 10,
+          transparentCorners: false,
+          vx: 0,
+          vy: 0,
+          left: 0,
+          top: 0,
+          hoverCursor: 'default',
+          moveCursor: 'default',
+          cornerStrokeColor: 'blue',
+          visible: false,
+          custom_id: extraFragmentCount,
+          selectable: false
+        });
+    
+        img.setControlVisible('tl', false);
+        img.setControlVisible('tr', false);
+        img.setControlVisible('br', false);
+        img.setControlVisible('bl', false);
+        img.setControlVisible('ml', false);
+        img.setControlVisible('mt', false);
+        img.setControlVisible('mr', false);
+        img.setControlVisible('mb', false);
+    
+        // add image onto canvas (it also re-render the canvas)
+        extra_canvas.add(img);
+    
+        if (extraFragmentCount == total) {
+          extra_canvas.forEachObject((object) => {
+            reposition('extra', object, 0);
+          });
+        }
+  
+        extraFragmentCount ++;
+        console.log(extraFragmentCount)
+    
+      }, {crossOrigin: 'anonymous'});
+    }
+
+    if (
+      window.location.pathname == "/game_human_ai.html" ||
+      window.location.pathname == "/game_human_ai"
+    ) {
+      $( ".canvas-container:nth-child(3)" ).css("background-color", "beige");
+    }
+    else if (
+      window.location.pathname == "/game_ai_human.html" ||
+      window.location.pathname == "/game_ai_human"
+    ) {
+      $( ".canvas-container:nth-child(1)" ).css("background-color", "beige");
+    }
   }
 }
 
@@ -774,7 +844,12 @@ function setSelectable(selectable) {
 }
 
 function resizeCanvas() {
-  if (window.location.pathname == '/game_human.html' || window.location.pathname == '/game_human' || splitMode == 'single') {
+  if (
+    window.location.pathname == '/game_human.html' ||
+    window.location.pathname == '/game_human' ||
+    ((window.location.pathname == '/game_human_ai.html' || window.location.pathname == '/game_human_ai') && splitMode == 'user') ||
+    ((window.location.pathname == '/game_ai_human.html' || window.location.pathname == '/game_ai_human') && splitMode == 'robot')
+  ) {
     $( ".stage" ).css("display", "block");
 
     $( ".spliter" ).css("display", "none");
@@ -792,10 +867,54 @@ function resizeCanvas() {
     $( ".canvas-container:nth-child(1) .upper-canvas" ).css("width", window.innerWidth + 'px');
     $( ".canvas-container:nth-child(1) .upper-canvas" ).css("height", window.innerHeight + 'px');
 
+    $( ".canvas-container:nth-child(1)" ).css("display", "block");
     $( ".canvas-container:nth-child(3)" ).css("display", "none");
 
-    main_canvas.setWidth(window.innerWidth);
-    main_canvas.setHeight(window.innerHeight);
+    if(
+      window.location.pathname == '/game_human.html' ||
+      window.location.pathname == '/game_human' ||
+      ((window.location.pathname == '/game_human_ai.html' || window.location.pathname == '/game_human_ai') && splitMode == 'user')
+    ) {
+      main_canvas.setWidth(window.innerWidth);
+      main_canvas.setHeight(window.innerHeight);
+    }
+    else {
+      extra_canvas.setWidth(window.innerWidth);
+      extra_canvas.setHeight(window.innerHeight);
+    }
+  }
+  if (
+    ((window.location.pathname == '/game_human_ai.html' || window.location.pathname == '/game_human_ai') && splitMode == 'robot') ||
+    ((window.location.pathname == '/game_ai_human.html' || window.location.pathname == '/game_ai_human') && splitMode == 'user')
+  ) {
+    $( ".stage" ).css("display", "block");
+
+    $( ".spliter" ).css("display", "none");
+
+    $( ".canvas-container:nth-child(3)" ).css("width", window.innerWidth + 'px');
+    $( ".canvas-container:nth-child(3)" ).css("height", window.innerHeight + 'px');
+
+    $( ".canvas-container:nth-child(3) .lower-canvas" ).attr("width", window.innerWidth);
+    $( ".canvas-container:nth-child(3) .lower-canvas" ).attr("height", window.innerHeight);
+    $( ".canvas-container:nth-child(3) .lower-canvas" ).css("width", window.innerWidth + 'px');
+    $( ".canvas-container:nth-child(3) .lower-canvas" ).css("height", window.innerHeight + 'px');
+
+    $( ".canvas-container:nth-child(3) .upper-canvas" ).attr("width", window.innerWidth);
+    $( ".canvas-container:nth-child(3) .upper-canvas" ).attr("height", window.innerHeight);
+    $( ".canvas-container:nth-child(3) .upper-canvas" ).css("width", window.innerWidth + 'px');
+    $( ".canvas-container:nth-child(3) .upper-canvas" ).css("height", window.innerHeight + 'px');
+
+    $( ".canvas-container:nth-child(1)" ).css("display", "none");
+    $( ".canvas-container:nth-child(3)" ).css("display", "block");
+
+    if((window.location.pathname == '/game_human_ai.html' || window.location.pathname == '/game_human_ai') && splitMode == 'robot') {
+      extra_canvas.setWidth(window.innerWidth);
+      extra_canvas.setHeight(window.innerHeight);
+    }
+    else {
+      main_canvas.setWidth(window.innerWidth);
+      main_canvas.setHeight(window.innerHeight);
+    }
   }
   else if (splitMode == 'vertical'){
     var firstCanvasRatio = mainCanvasRatio;
@@ -838,6 +957,7 @@ function resizeCanvas() {
     $( ".canvas-container:nth-child(3) .upper-canvas" ).css("width", ((window.innerWidth - spliterWidth) * secondCanvasRatio) + 'px');
     $( ".canvas-container:nth-child(3) .upper-canvas" ).css("height", (window.innerHeight) + 'px');
 
+    $( ".canvas-container:nth-child(1)" ).css("display", "block");
     $( ".canvas-container:nth-child(3)" ).css("display", "block");
 
     main_canvas.setWidth((window.innerWidth - spliterWidth) * mainCanvasRatio);
@@ -887,6 +1007,7 @@ function resizeCanvas() {
     $( ".canvas-container:nth-child(3) .upper-canvas" ).css("width", (window.innerWidth) + 'px');
     $( ".canvas-container:nth-child(3) .upper-canvas" ).css("height", ((window.innerHeight - spliterWidth) * secondCanvasRatio) + 'px');
 
+    $( ".canvas-container:nth-child(1)" ).css("display", "block");
     $( ".canvas-container:nth-child(3)" ).css("display", "block");
 
     main_canvas.setWidth(window.innerWidth);
@@ -968,7 +1089,7 @@ function animate() {
   main_canvas.renderAll();
 }
 
-function reposition(object, count) {
+function reposition(type, object, count) {
   if (count < 8) {
     var isOverlayed = false;
 
@@ -978,7 +1099,9 @@ function reposition(object, count) {
     });
     object.setCoords();
 
-    main_canvas.forEachObject((otherObject) => {
+    var canvas = type == 'main' ? main_canvas : extra_canvas;
+
+    canvas.forEachObject((otherObject) => {
       if (object != otherObject) {
         if (object.intersectsWithObject(otherObject)) {
           isOverlayed = true;
@@ -986,7 +1109,7 @@ function reposition(object, count) {
       }
     });
     if (isOverlayed) {
-      reposition(object, count + 1);
+      reposition(type, object, count + 1);
     }
     else {
       object.set({
