@@ -31,7 +31,8 @@ var crushCounts = []; // each objects' crush counts with other objects
 var absorptionConst = 0.9;
 
 var isMovingObject = false; // is moving a object currently by mouse
-var isPanningViewport = false; // is panning viewport currently by mouse
+var isPanningMainViewport = false; // is panning main viewport currently by mouse
+var isPanningExtraViewport = false; // is panning extra viewport currently by mouse
 var initialMouseX = 0, initialMouseY = 0; // x and y of initial mousedown point
 var initialViewPortTLX = 0, initialViewPortTLY = 0; // x and y of initial viewport top-left point when mousedown
 var initialSelectedObjectCenterX = 0, initialSelectedObjectCenterY = 0; // x and y of initial center point of selected when mousedown
@@ -173,7 +174,7 @@ main_canvas.on('mouse:down', function(options) {
 
   if (!options.target || main_canvas.isTargetTransparent(options.target, x, y)) {
     if (isMobile || options.e.buttons == 1) {
-      isPanningViewport = true;
+      isPanningMainViewport = true;
       initialMouseX = x;
       initialMouseY = y;
       initialViewPortTLX = main_canvas.vptCoords.tl.x;
@@ -230,11 +231,11 @@ main_canvas.on('mouse:move', function(options) {
     y = options.e.offsetY;
   }
 
-  if (isPanningViewport) {
+  if (isPanningMainViewport) {
     if (isMobile) {
       var newVptTlPoint = new fabric.Point(
-        initialViewPortTLX - (x - initialMouseX),
-        initialViewPortTLY - (y - initialMouseY)
+        initialViewPortTLX * main_canvas.getZoom() - (x - initialMouseX),
+        initialViewPortTLY * main_canvas.getZoom() - (y - initialMouseY)
       )
       main_canvas.absolutePan(newVptTlPoint);
       main_canvas.renderAll();
@@ -376,7 +377,7 @@ main_canvas.on('mouse:move', function(options) {
 });
 
 main_canvas.on('mouse:up', function(options) {
-  isPanningViewport = false;
+  isPanningMainViewport = false;
   
   if (currentActionType == 0 && isMovingObject) {
     if(!options.e.ctrlKey) {
@@ -505,6 +506,67 @@ main_canvas.on('mouse:wheel', function(options) {
       $('.four').removeClass('disabled');
     }
   }
+});
+
+extra_canvas.on('mouse:down', function(options) {
+  var x, y;
+  if (isMobile) {
+    x = options.e.targetTouches[0].clientX;
+    y = options.e.targetTouches[0].clientY;
+  }
+  else {
+    x = options.e.offsetX;
+    y = options.e.offsetY;
+  }
+
+  if (isMobile || options.e.buttons == 1) {
+    isPanningExtraViewport = true;
+    initialMouseX = x;
+    initialMouseY = y;
+    initialViewPortTLX = extra_canvas.vptCoords.tl.x;
+    initialViewPortTLY = extra_canvas.vptCoords.tl.y;
+  }
+});
+
+extra_canvas.on('mouse:move', function(options) {
+  var x, y;
+  if (isMobile) {
+    x = options.e.targetTouches[0].clientX;
+    y = options.e.targetTouches[0].clientY;
+  }
+  else {
+    x = options.e.offsetX;
+    y = options.e.offsetY;
+  }
+
+  if (isPanningExtraViewport) {
+    if (isMobile) {
+      var newVptTlPoint = new fabric.Point(
+        initialViewPortTLX * extra_canvas.getZoom() - (x - initialMouseX),
+        initialViewPortTLY * extra_canvas.getZoom() - (y - initialMouseY)
+      )
+      extra_canvas.absolutePan(newVptTlPoint);
+      extra_canvas.renderAll();
+    }
+    else if(options.e.buttons == 1) {
+      var extraCanvasIndex = 3;
+      if (window.location.pathname == '/game_ai_human.html' || window.location.pathname == '/game_ai_human') {
+        extraCanvasIndex = 1;
+      }
+      if ($( `.canvas-container:nth-child(${extraCanvasIndex}) .upper-canvas` )[0] == options.e.target) {
+        var newVptTlPoint = new fabric.Point(
+          initialViewPortTLX * extra_canvas.getZoom() - (x - initialMouseX),
+          initialViewPortTLY * extra_canvas.getZoom() - (y - initialMouseY)
+        );
+        extra_canvas.absolutePan(newVptTlPoint);
+        extra_canvas.renderAll();
+      }
+    }
+  }
+});
+
+extra_canvas.on('mouse:up', function(options) {
+  isPanningExtraViewport = false;
 });
 
 extra_canvas.on('mouse:wheel', function(options) {
@@ -1189,6 +1251,11 @@ function reposition(type, object, count) {
         visible: true
       });
     }
+  }
+  else {
+    object.set({
+      visible: true
+    });
   }
 }
 
