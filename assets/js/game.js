@@ -248,7 +248,7 @@ main_canvas.on('mouse:move', function(options) {
         var newVptTlPoint = new fabric.Point(
           initialViewPortTLX * main_canvas.getZoom() - (x - initialMouseX),
           initialViewPortTLY * main_canvas.getZoom() - (y - initialMouseY)
-        )
+        );
         main_canvas.absolutePan(newVptTlPoint);
         main_canvas.renderAll();
       }
@@ -381,13 +381,13 @@ main_canvas.on('mouse:up', function(options) {
   if (currentActionType == 0 && isMovingObject) {
     if(!options.e.ctrlKey) {
       if (main_canvas.getActiveObject()) {
-        movingObjects = [main_canvas.getActiveObject()];
-        crushCounts = [0];
-        animate();
+        addCurrentStateToHistory();
       }
     }
     else if(main_canvas.getActiveObject()) {
-      addCurrentStateToHistory();
+      movingObjects = [main_canvas.getActiveObject()];
+      crushCounts = [0];
+      animate();
     }
     isMovingObject = false;
   }

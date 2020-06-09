@@ -44,7 +44,7 @@ body {
   margin-right: 0;
   background-color: #eeeeeeee;
   border-radius: 5px;
-  z-index: 10;
+  z-index: 20;
   -webkit-box-shadow: 1px 1px 10px 0px rgba(0,0,0,0.75);
   -moz-box-shadow: 1px 1px 10px 0px rgba(0,0,0,0.75);
   box-shadow: 1px 1px 10px 0px rgba(0,0,0,0.75);
@@ -283,9 +283,9 @@ body {
   width: 240px;
   height: 140px;
   background: white;
-  left: 120px;
-  top: 70px;
-  z-index: 10;
+  left: 10px;
+  top: 75px;
+  z-index: 20;
   box-shadow: 0px 1px 11px black;
   padding: 5px;
   border-radius: 3px;
@@ -406,8 +406,8 @@ body {
   }
 
   .ai-tip-slider-container {
-    left: 50%;
-    transform: translateX(-50%);
+    right: 0;
+    left: auto;
   }
 }
 
