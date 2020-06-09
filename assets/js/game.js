@@ -4,7 +4,7 @@ if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine
     isMobile = true;
 }
 
-var splitMode = 'vertical'; // screen split mode
+var splitMode; // screen split mode
 var spliterWidth = 4; // width of spliter
 var mainCanvasRatio = 0.5; // ratio of main canvas in whole screen
 var extraCanvasRatio = 0.5; // ratio of extra canvas in whole screen
@@ -728,6 +728,19 @@ function init() {
 
   main_canvas.selection = false;
   extra_canvas.selection = false;
+
+  if (
+    window.location.pathname == "/game_human_ai.html" ||
+    window.location.pathname == "/game_human_ai"
+  ) {
+    splitMode = 'user';
+  }
+  else if(
+    window.location.pathname == "/game_ai_human.html" ||
+    window.location.pathname == "/game_ai_human"
+  ) {
+    splitMode = 'robot';
+  }
 
   resizeCanvas();
 
