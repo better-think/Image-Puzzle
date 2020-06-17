@@ -99,6 +99,10 @@ body {
   position: relative;
 }
 
+.floating-bar .assistant-player img {
+  cursor: pointer;
+}
+
 .floating-bar .assistant-player .number-badge {
   position: absolute;
   top: 0;
@@ -110,6 +114,8 @@ body {
   height: 18px;
   font-size: 12px;
   border-radius: 50%;
+  user-select: none;
+  cursor: pointer;
 }
 
 .floating-bar .assistant-player .progress {
@@ -276,6 +282,53 @@ body {
 }
 
 .triggerButton:checked ~.one:hover, .triggerButton:checked ~ .two:hover, .triggerButton:checked ~ .three:hover, .triggerButton:checked ~ .four:hover { opacity: .9; }
+
+.robot-select-container {
+  position: absolute;
+  display: none;
+  width: 140px;
+  height: 190px;
+  background: white;
+  left: 50%;
+  top: 75px;
+  transform: translateX(-50%);
+  z-index: 20;
+  box-shadow: 0px 1px 11px black;
+  padding: 5px;
+  border-radius: 3px;
+}
+
+.robot-select-container ul {
+  list-style: none;
+  padding: 0;
+}
+
+.robot-select-container ul li {
+  width: 130px;
+  cursor: pointer;
+}
+
+.robot-select-container ul li div{
+  overflow: hidden;
+  height: 60px;
+  user-select: none;
+  text-align: start;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.robot-select-container ul li div:hover{
+  background-color: antiquewhite;
+}
+
+.robot-select-container ul li img {
+  height: 50px;
+  margin: 5px;
+}
+
+.robot-select-container ul li span {
+  padding: 0 5px;
+}
 
 .ai-tip-slider-container {
   position: absolute;

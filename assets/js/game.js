@@ -42,6 +42,25 @@ var logItem = {}; // log item for current action
 var actionHistory = []; // history of action
 var actionStep = -1; // current action step
 
+var robot_arr = [ // AI list
+  {
+    id: 'ai0001',
+    name: '小明',
+    imgURL: 'assets/img/bot/2.png'
+  },
+  {
+    id: 'ai0002',
+    name: '小明-1',
+    imgURL: 'assets/img/bot/1.png'
+  },
+  {
+    id: 'ai0003',
+    name: '小明-2',
+    imgURL: 'assets/img/bot/2.png'
+  }
+];
+var selectedAIIndex = 0;
+
 var tip_count_on_view = 5; // count of AI's tips to display on tip menu
 var ai_tip_arr = [ // AI's tip list
 	'Do ABC',
@@ -633,6 +652,7 @@ $('.four').click(function(){
 });
 
 $('#intro_modal').modal('show');
+
 $("#intro-content")[0].innerHTML = intro_arr[introContentId].content;
 
 $('#next_btn').click(function() {
@@ -711,8 +731,40 @@ $('#down').click(function() {
 	}
 });
 
-
 $('#robot').click(function() {
+  $('.ai-tip-slider-container').hide();
+
+  if ($('.robot-select-container').css('display') == 'block') {
+		$('.robot-select-container').hide();
+	}
+	else if($('.robot-select-container').css('display') == 'none'){
+    $('.robot-select-container').show();
+	}
+	
+	var str = '';
+	for(var i = 0; i < robot_arr.length; i ++){
+    str += `<li id=${robot_arr[i].id}>`;
+    str += '<div>';
+    str += `<img src="${robot_arr[i].imgURL}">`;
+    str += `<span>${robot_arr[i].name}</span>`;
+    str += '</div>';
+		str += '</li>';
+	}
+  $('.robot-select-container ul').html(str);
+  
+  $('.robot-select-container li').click(function(e) {
+    selectedAIIndex = robot_arr.findIndex((item) => {
+      return item.id == e.currentTarget.id;
+    });
+    $('.robot-select-container').hide();
+    $('.assistant-player img').attr('src', robot_arr[selectedAIIndex].imgURL);
+    $('.assistant-player .username').html(robot_arr[selectedAIIndex].name);
+  });
+});
+
+$('#tip').click(function() {
+  $('.robot-select-container').hide();
+
 	if ($('.ai-tip-slider-container').css('display') == 'flex') {
 		$('.ai-tip-slider-container').hide();
 	}
@@ -742,6 +794,7 @@ $( ".spliter" ).mousedown(function(e) {
     $( ".stage" ).css("cursor", "n-resize");
   }
 });
+
 $( ".stage" ).mousemove(function(e) {
   if(isDragingSpliter) {
     if (splitMode == 'vertical') {
@@ -767,6 +820,7 @@ $( ".stage" ).mousemove(function(e) {
     resizeCanvas();
   }
 });
+
 $( ".spliter" ).mouseup(function(e) {
   if(isDragingSpliter) {
     isDragingSpliter = false;
@@ -774,6 +828,7 @@ $( ".spliter" ).mouseup(function(e) {
     $( ".stage" ).css("cursor", "default");
   }
 });
+
 $( ".stage" ).mouseup(function(e) {
   if(isDragingSpliter) {
     isDragingSpliter = false;
