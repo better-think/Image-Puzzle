@@ -177,6 +177,10 @@ body {
   border-top: 9px solid #dc3545;
 }
 
+.arrow-down:hover {
+  border-top-color: #ef4858;
+}
+
 .record-panel {
   position: absolute;
   display: flex;
