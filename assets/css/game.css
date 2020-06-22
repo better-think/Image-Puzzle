@@ -99,10 +99,6 @@ body {
   position: relative;
 }
 
-.floating-bar .assistant-player img {
-  cursor: pointer;
-}
-
 .floating-bar .assistant-player .number-badge {
   position: absolute;
   top: 0;
@@ -166,6 +162,19 @@ body {
 
 .floating-bar .btn-group label.btn.action-button.focus, .floating-bar .btn-group label.btn.action-button:focus, .floating-bar .btn-group label.btn.action-button.active, .floating-bar .btn-group label.btn.action-button:active {
   box-shadow: none;
+}
+
+.arrow-down {
+  position: absolute;
+  display: none;
+  cursor: pointer;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-top: 9px solid #dc3545;
 }
 
 .record-panel {
@@ -290,7 +299,7 @@ body {
   height: 190px;
   background: white;
   left: 50%;
-  top: 75px;
+  top: 85px;
   transform: translateX(-50%);
   z-index: 20;
   box-shadow: 0px 1px 11px black;
@@ -421,7 +430,7 @@ body {
   .floating-bar.multi-player {
     display: block;
     width: calc(100% - 20px);
-    height: 160px;
+    height: 162px;
   }
 
   .floating-bar.multi-player .player {
@@ -430,7 +439,7 @@ body {
 
   .floating-bar.multi-player .action {
     width: 100%;
-    margin-top: 10px;
+    margin-top: 12px;
     padding: 5px;
     justify-content: space-evenly;
   }

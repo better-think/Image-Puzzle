@@ -731,35 +731,37 @@ $('#down').click(function() {
 	}
 });
 
-$('#robot').click(function() {
-  $('.ai-tip-slider-container').hide();
+$('#robot_select_arrow').click(function() {
+  if (robot_arr && robot_arr.length >1) {
+    $('.ai-tip-slider-container').hide();
 
-  if ($('.robot-select-container').css('display') == 'block') {
-		$('.robot-select-container').hide();
-	}
-	else if($('.robot-select-container').css('display') == 'none'){
-    $('.robot-select-container').show();
-	}
-	
-	var str = '';
-	for(var i = 0; i < robot_arr.length; i ++){
-    str += `<li id=${robot_arr[i].id}>`;
-    str += '<div>';
-    str += `<img src="${robot_arr[i].imgURL}">`;
-    str += `<span>${robot_arr[i].name}</span>`;
-    str += '</div>';
-		str += '</li>';
-	}
-  $('.robot-select-container ul').html(str);
-  
-  $('.robot-select-container li').click(function(e) {
-    selectedAIIndex = robot_arr.findIndex((item) => {
-      return item.id == e.currentTarget.id;
+    if ($('.robot-select-container').css('display') == 'block') {
+      $('.robot-select-container').hide();
+    }
+    else if($('.robot-select-container').css('display') == 'none'){
+      $('.robot-select-container').show();
+    }
+    
+    var str = '';
+    for(var i = 0; i < robot_arr.length; i ++){
+      str += `<li id=${robot_arr[i].id}>`;
+      str += '<div>';
+      str += `<img src="${robot_arr[i].imgURL}">`;
+      str += `<span>${robot_arr[i].name}</span>`;
+      str += '</div>';
+      str += '</li>';
+    }
+    $('.robot-select-container ul').html(str);
+    
+    $('.robot-select-container li').click(function(e) {
+      selectedAIIndex = robot_arr.findIndex((item) => {
+        return item.id == e.currentTarget.id;
+      });
+      $('.robot-select-container').hide();
+      $('.assistant-player img').attr('src', robot_arr[selectedAIIndex].imgURL);
+      $('.assistant-player .username').html(robot_arr[selectedAIIndex].name);
     });
-    $('.robot-select-container').hide();
-    $('.assistant-player img').attr('src', robot_arr[selectedAIIndex].imgURL);
-    $('.assistant-player .username').html(robot_arr[selectedAIIndex].name);
-  });
+  }
 });
 
 $('#tip').click(function() {
@@ -981,6 +983,10 @@ function init() {
       window.location.pathname == "/game_human_ai"
     ) {
       $( ".canvas-container:nth-child(3)" ).css("background-color", "beige");
+
+      if (robot_arr && robot_arr.length > 1) {
+        $(".arrow-down").css('display', 'block');
+      }
     }
     else if (
       window.location.pathname == "/game_ai_human.html" ||
