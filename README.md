@@ -8,8 +8,12 @@
       <td colspan="3"><h3> - How To Run</h3></td>
     </tr>
     <tr>
-      <td><img src="./assets/img/readme/install_1.png"></td>
-      <td><img src="./assets/img/readme/install_2.png"></td>
+      <td colspan="3">
+        <table>
+          <td><img src="./assets/img/readme/install_1.png"></td>
+          <td><img src="./assets/img/readme/install_2.png"></td>
+        <table>
+      </td>
     </tr>
     <tr>
       <td colspan="3"><h3> - Game Introduction</h3></td>
